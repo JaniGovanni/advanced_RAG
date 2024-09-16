@@ -1,0 +1,7 @@
+# Ignorierte Verzeichnisse und Datei
+knowledge-graph-rag/
+course/
+Streamlit/
+uploaded_files/
+dev_tests/
+app/.env
