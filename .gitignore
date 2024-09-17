@@ -5,3 +5,4 @@ Streamlit/
 uploaded_files/
 dev_tests/
 app/.env
+app/data

@@ -11,6 +11,7 @@ from app.doc_processing.metadata import convert_to_document
 from langchain_ollama import ChatOllama
 from langchain.prompts import ChatPromptTemplate
 from langchain.schema.output_parser import StrOutputParser
+import app.llm
 
 
 
@@ -48,6 +49,9 @@ class ProcessDocConfig:
 
 
 def process_doc(config):
+    # if local -> get_ollama_llm
+    # if not -> get_groq_llm
+    llm = app.llm.get_groq_llm()
     if config.local:
 
         pdf_elements = partition(filename=config.filepath,
@@ -75,7 +79,7 @@ def process_doc(config):
     if config.search_by_summaries:
         # if table data is included it might be better to build
         # table and text summaries for the similarity search
-        summaries = create_table_text_summaries(pdf_chunks)
+        summaries = create_table_text_summaries(pdf_chunks, llm)
     else:
         summaries = []
     pdf_chunks = convert_to_document(elements=pdf_chunks, tag=config.tag, summaries=summaries)
@@ -83,7 +87,7 @@ def process_doc(config):
     return pdf_chunks
 
 
-def create_table_text_summaries(chunks):
+def create_table_text_summaries(chunks, model):
     """
     Creates a summary for table and text chunks and adds this to the metadata
     """
@@ -96,9 +100,6 @@ def create_table_text_summaries(chunks):
         These summaries will be embedded and used to retrieve the raw text or table elements. \
         Give a concise summary of the table or text that is well optimized for retrieval. Table or text: {element} """
     prompt = ChatPromptTemplate.from_template(prompt_text)
-
-    # phi3.5 doesnt work good for this
-    model = ChatOllama(temperature=0, model="phi3.5")
 
     summarize_chain = {"element": lambda x: x} | prompt | model | StrOutputParser()
 

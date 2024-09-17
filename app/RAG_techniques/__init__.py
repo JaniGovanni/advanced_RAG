@@ -75,9 +75,11 @@ def generate_multi_query(query, llm):
     ]
     response = llm.invoke(messages)
     content = response.content
-    # split generated queries
-    # phi 3.5 create indices in every case......
-    content = re.findall(r'\d+\.\s+(.*)', content, re.MULTILINE)
+    # The local llm keeps creating indices, llama 3 with 70b doesnt do that
+    if llm.get_name() == 'ChatOllama':
+        content = re.findall(r'\d+\.\s+(.*)', content, re.MULTILINE)
+    else:
+        content = content.split('\n')
     return content
 
 

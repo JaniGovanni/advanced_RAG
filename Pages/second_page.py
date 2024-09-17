@@ -43,7 +43,7 @@ st.session_state['process_config'].unwanted_categories_list = st.multiselect("Th
                                                                       # these should be a list of all categories existing (Table, Image,...)
                                                                              options=st.session_state['unwanted_categories'],
                                                                              default=st.session_state['unwanted_categories'])
-
+st.write(st.session_state['process_config'].unwanted_categories_list)
 go_further = st.button("Click when finished")
 if go_further:
     retriever = get_chroma_store_as_retriever()

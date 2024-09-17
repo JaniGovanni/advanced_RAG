@@ -28,7 +28,7 @@ if user_query is not None and user_query != "":
     st.session_state['chat_config'].memory.chat_memory.messages.append(AIMessage(content=ai_answer))
 
     # debugging
-    st.write(joint_query)
+    #st.write(joint_query)
 
 # conversation
 for message in st.session_state['chat_config'].memory.chat_memory.messages:

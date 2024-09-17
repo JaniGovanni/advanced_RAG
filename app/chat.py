@@ -1,6 +1,6 @@
 from app.vectorstore import get_chroma_store_as_retriever
 from langchain_community.llms import Ollama
-from langchain_ollama import ChatOllama
+import app.llm
 from app.chains import HistoryAwareQueryChain
 from app.memory import build_window_buffer_memory, build_conversation_buffer_memory
 import app.RAG_techniques as RAG_techniques
@@ -26,14 +26,17 @@ class ChatConfig:
                  expand_by_answer=False,
                  expand_by_mult_queries=False,
                  reranking=True,
-                 history_aware=False,
+                 llm=None,
                  k=10):
         self.tag = tag
         self.expand_by_answer = expand_by_answer
         self.expand_by_mult_queries = expand_by_mult_queries
         self.reranking = reranking
         self.k = k
-        self.llm = ChatOllama(model="phi3.5", temperature=0)   # dont forget model=
+        if llm:
+            self.llm=llm
+        else:
+            self.llm = app.llm.get_groq_llm()
         #self.memory = build_window_buffer_memory(tag=self.tag)
         self.memory = ConversationBufferWindowMemory(memory_key="history",
                                                      output_key="response",
@@ -43,7 +46,7 @@ class ChatConfig:
     def history_awareness(self, yes):
         if yes:
             self.history_aware = True
-            self.history_chain = HistoryAwareQueryChain(memory=self.memory)
+            self.history_chain = HistoryAwareQueryChain(memory=self.memory, llm=self.llm)
         else:
             self.history_aware = False
 

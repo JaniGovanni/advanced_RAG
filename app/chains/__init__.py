@@ -62,7 +62,7 @@ from app.memory import build_window_buffer_memory, build_conversation_buffer_mem
 #
 
 class HistoryAwareQueryChain:
-    def __init__(self, memory, verbose=False):
+    def __init__(self, memory, llm, verbose=False):
         """
         Creates a chain that reformulates a user's query, based on the previous
         conversation stored in memory, as a standalone question.
@@ -71,10 +71,7 @@ class HistoryAwareQueryChain:
         :param verbose: whether to print verbose output
         """
         self.memory = memory
-        self.llm = ChatOllama(
-            model="phi3.5",
-            temperature=0,
-        )
+        self.llm = llm
         # rewrite with runnables
         # https://python.langchain.com/v0.2/docs/tutorials/chatbot/
         self.conversation = ConversationChain(

@@ -10,6 +10,8 @@ def save_file(file):
     """
     saves the uploaded file in a specified directory
     """
+    if not os.path.exists('uploaded_files'):
+        os.makedirs('uploaded_files')
     filepath = os.path.join('uploaded_files', file.name)
     with open(filepath, 'wb') as f:
         f.write(file.getbuffer())
