@@ -43,7 +43,7 @@ def create_ec2_instance(instance_name, ec2):
             str: The ID of the created EC2 instance.
     """
     response = ec2.run_instances(
-        ImageId='ami-0197c13a4f68c9360',
+        ImageId='ami-0197c13a4f68c9360', # check AMI
         MinCount=1,
         MaxCount=1,
         InstanceType='t2.large', # t2.micro also possible
@@ -97,7 +97,7 @@ def create_security_group(group_name, ec2):
 
     return security_group_id
 
-def update_security_group(group_id, protocol, port, cidr):
+def update_security_group(ec2,group_id, protocol, port, cidr):
     """Updates a security group with a new ingress rule.
 
         Args:
@@ -152,7 +152,7 @@ def update_security_group(group_id, protocol, port, cidr):
 # ec2.modify_instance_attribute(InstanceId=instance_id, Groups=[security_group_id])
 
 # status -> running, stopped, terminated, pending etc.
-def wait_for_status(instance_id, target_status):
+def wait_for_status(ec2,instance_id, target_status):
     while True:
         response = ec2.describe_instances(InstanceIds=instance_id)
 
@@ -165,11 +165,11 @@ def wait_for_status(instance_id, target_status):
         time.sleep(10)
 
 
-def terminate_instances(instance_id):
+def terminate_instances(ec2,instance_id):
     print("EC2 Instance Termination")
     ec2.terminate_instances(InstanceIds=instance_id)
 
-    wait_for_status(instance_id, 'terminated')
+    wait_for_status(ec2,[instance_id], 'terminated')
 
 # # describe IAM role
 # iam = boto3.client('iam')

@@ -6,3 +6,6 @@ uploaded_files/
 dev_tests/
 app/.env
 app/data
+deploy/
+create_EC2.py
+

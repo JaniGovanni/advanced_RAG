@@ -12,6 +12,56 @@ from langchain_ollama import ChatOllama
 from langchain.prompts import ChatPromptTemplate
 from langchain.schema.output_parser import StrOutputParser
 import app.llm
+from langchain.graphs import Neo4jGraph
+from langchain.graphs.graph_document import GraphDocument, Node, Relationship
+from langchain.graphs import LLMGraphTransformer
+import logging
+import os
+import dotenv
+
+dotenv.load_dotenv()
+
+
+def extract_knowledge_graph(pdf_chunks, llm):
+    """
+    Extracts a knowledge graph from a list of PDF chunks (Langchain documents) and returns a Neo4j graph object.
+    """
+    # only possible via api
+    graph = None
+    
+    try:
+        # Initialize Neo4j graph
+        graph = Neo4jGraph(
+            url=os.getenv("NEO4J_URI"),
+            username=os.getenv("NEO4J_USERNAME"),
+            password=os.getenv("NEO4J_PASSWORD"),
+            database=os.getenv("NEO4J_DATABASE"),
+        )
+        
+        # Initialize LLMGraphTransformer
+        graph_transformer = LLMGraphTransformer.from_llm(llm=llm)
+        
+        # Process each chunk and extract entities and relationships
+        for chunk in pdf_chunks:
+            try:
+                graph_documents = graph_transformer.convert_to_graph_documents([chunk])
+                for graph_document in graph_documents:
+                    graph.add_graph_documents([graph_document])
+                
+            except Exception as e:
+                logging.error(f"Error processing chunk: {e}")
+                continue  # Skip to the next chunk if there's an error
+        
+        return graph
+    except Exception as e:
+        logging.error(f"Error in knowledge graph extraction: {e}")
+        return None
+    finally:
+        if graph:
+            try:
+                graph.close()
+            except Exception as e:
+                logging.error(f"Error closing Neo4j connection: {e}")
 
 
 
@@ -24,6 +74,7 @@ class ProcessDocConfig:
     url: str | None
     source: str
     search_by_summaries: bool
+    extract_knowledge_graph: bool
     # language could be added for improved ocr
 
     def __init__(self,
@@ -33,7 +84,8 @@ class ProcessDocConfig:
                  local=True,
                  filepath=None,
                  url=None,
-                 search_by_summaries=False
+                 search_by_summaries=False,
+                 extract_knowledge_graph=False
                  ):
         self.local = local
         self.unwanted_titles_list = unwanted_titles_list
@@ -41,7 +93,8 @@ class ProcessDocConfig:
         self.tag = tag
         self.filepath = filepath
         self.url = url
-        self.search_by_summaries = search_by_summaries   # isnt recommended
+        self.search_by_summaries = search_by_summaries   # is not recommended
+        self.extract_knowledge_graph = extract_knowledge_graph
         if filepath is not None:
             self.source = os.path.basename(filepath)
         else:
@@ -83,8 +136,12 @@ def process_doc(config):
     else:
         summaries = []
     pdf_chunks = convert_to_document(elements=pdf_chunks, tag=config.tag, summaries=summaries)
+    if config.extract_knowledge_graph:
+        knowledge_graph = extract_knowledge_graph(pdf_chunks, llm)
+    else:
+        knowledge_graph = None
 
-    return pdf_chunks
+    return pdf_chunks, knowledge_graph
 
 
 def create_table_text_summaries(chunks, model):
