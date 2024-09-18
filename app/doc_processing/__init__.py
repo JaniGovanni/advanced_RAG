@@ -14,7 +14,7 @@ from langchain.schema.output_parser import StrOutputParser
 import app.llm
 from langchain.graphs import Neo4jGraph
 from langchain.graphs.graph_document import GraphDocument, Node, Relationship
-from langchain.graphs import LLMGraphTransformer
+from langchain_experimental.graph_transformers import LLMGraphTransformer
 import logging
 import os
 import dotenv
@@ -141,7 +141,7 @@ def process_doc(config):
     else:
         knowledge_graph = None
 
-    return pdf_chunks, knowledge_graph
+    return pdf_chunks
 
 
 def create_table_text_summaries(chunks, model):
