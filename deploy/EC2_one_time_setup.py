@@ -2,10 +2,17 @@ import boto3
 from botocore.exceptions import ClientError
 import time
 
-instance_name = "mlops-prod"
-ec2 = boto3.client('ec2')
-
 def check_if_instance_exists(instance_name, ec2):
+    """
+        Checks if an EC2 instance with the specified name exists.
+
+        Args:
+            instance_name (str): The name of the instance to check.
+            ec2 (boto3.client): An EC2 client object.
+
+        Returns:
+            str: The ID of the instance if found, or an empty string if not found.
+    """
     response = ec2.describe_instances()
     instance_id = ""
 
@@ -18,16 +25,23 @@ def check_if_instance_exists(instance_name, ec2):
                 instance_id = resp['InstanceId']
 
     if instance_id == "":
-        print(f"No instance found with name {instance_name}, creating one.")
-        instance_id = create_ec2_instance(instance_name, ec2)
-        print("instance created")
-        # raise("Stop here!!!")
+        print(f"No instance found with name {instance_name}")
     else:
         print("Instance already existed.")
-    print(f"Instance ID: {instance_id}")
+        print(f"Instance ID: {instance_id}")
     return instance_id
 
 def create_ec2_instance(instance_name, ec2):
+    """
+        Creates a new EC2 instance with the specified name using the provided AMI, instance type, and key pair.
+
+        Args:
+            instance_name (str): The desired name for the EC2 instance.
+            ec2 (boto3.client): An EC2 client object.
+
+        Returns:
+            str: The ID of the created EC2 instance.
+    """
     response = ec2.run_instances(
         ImageId='ami-0197c13a4f68c9360',
         MinCount=1,
@@ -57,6 +71,16 @@ def create_ec2_instance(instance_name, ec2):
 
 
 def create_security_group(group_name, ec2):
+    """
+        Creates a new security group with the specified name if it doesn't already exist.
+
+        Args:
+            group_name (str): The desired name for the security group.
+            ec2 (boto3.client): An EC2 client object.
+
+        Returns:
+            str: The ID of the created or existing security group.
+    """
     response = ec2.describe_security_groups()
 
     # check if group already exist
@@ -127,6 +151,7 @@ def update_security_group(group_id, protocol, port, cidr):
 # # updating all changes on the group
 # ec2.modify_instance_attribute(InstanceId=instance_id, Groups=[security_group_id])
 
+# status -> running, stopped, terminated, pending etc.
 def wait_for_status(instance_id, target_status):
     while True:
         response = ec2.describe_instances(InstanceIds=instance_id)

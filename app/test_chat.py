@@ -1,5 +1,4 @@
 from app.chat import get_result_docs, ChatConfig, create_RAG_output
-from langchain_community.llms import Ollama
 import app.llm
 import os
 import dotenv

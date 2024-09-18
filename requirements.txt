@@ -11,6 +11,8 @@ backoff==2.2.1
 bcrypt==4.2.0
 beautifulsoup4==4.12.3
 blinker==1.8.2
+boto3==1.35.20
+botocore==1.35.20
 build==1.2.1
 cachetools==5.5.0
 certifi==2024.7.4
@@ -58,6 +60,7 @@ importlib_metadata==8.4.0
 importlib_resources==6.4.4
 iopath==0.1.10
 Jinja2==3.1.4
+jmespath==1.0.1
 joblib @ file:///private/var/folders/nz/j6p8yfhx1mv_0grj5xl4650h0000gp/T/abs_8ff7uji0v2/croot/joblib_1718217225309/work
 jsonpatch==1.33
 jsonpath-python==1.0.6
@@ -168,6 +171,7 @@ requests-toolbelt==1.0.0
 rich==13.8.0
 rpds-py==0.20.0
 rsa==4.9
+s3transfer==0.10.2
 safetensors==0.4.4
 scikit-learn @ file:///private/var/folders/k1/30mswbxs7r1g6zwn8y4fyt500000gp/T/abs_97o1ht3oty/croot/scikit-learn_1721921878202/work
 scipy @ file:///private/var/folders/nz/j6p8yfhx1mv_0grj5xl4650h0000gp/T/abs_b9t0odioph/croot/scipy_1717521487325/work/dist/scipy-1.13.1-cp311-cp311-macosx_11_0_arm64.whl#sha256=63d35c85356bd6a7d204bc184b0cd2a0220b8c9faf06c4f5de5a4e6bc73325f3
