@@ -6,7 +6,7 @@ from uuid import uuid4
 import json
 from langchain_community.vectorstores.utils import filter_complex_metadata
 
-load_dotenv(dotenv_path='/Users/jan/Desktop/advanced_rag/app/.env')
+load_dotenv()
 
 
 def get_chroma_store_as_retriever():

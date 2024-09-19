@@ -6,6 +6,6 @@ uploaded_files/
 dev_tests/
 app/.env
 app/data
-deploy/
+ML_OPS/
 create_EC2.py
 
