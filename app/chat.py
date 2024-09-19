@@ -20,6 +20,7 @@ class ChatConfig:
     k: int
     memory: ConversationBufferWindowMemory | ConversationBufferWindowMemory
     history_chain: HistoryAwareQueryChain
+    llm_choice: str  # Add this line
 
     def __init__(self,
                  tag,
@@ -27,16 +28,18 @@ class ChatConfig:
                  expand_by_mult_queries=False,
                  reranking=True,
                  llm=None,
-                 k=10):
+                 k=10,
+                 llm_choice="groq"):
         self.tag = tag
         self.expand_by_answer = expand_by_answer
         self.expand_by_mult_queries = expand_by_mult_queries
         self.reranking = reranking
         self.k = k
+        self.llm_choice = llm_choice  # Add this line
         if llm:
-            self.llm=llm
+            self.llm = llm
         else:
-            self.llm = app.llm.get_groq_llm()
+            self.llm = self.get_llm()  # Change this line
         #self.memory = build_window_buffer_memory(tag=self.tag)
         self.memory = ConversationBufferWindowMemory(memory_key="history",
                                                      output_key="response",
@@ -59,6 +62,11 @@ class ChatConfig:
 
     def set_reranking(self, flag):
         self.reranking = flag
+    def get_llm(self):
+        if self.llm_choice == "ollama":
+            return app.llm.get_ollama_llm()
+        else:
+            return app.llm.get_groq_llm()
 
 
 def get_result_docs(ChatConfig, query):

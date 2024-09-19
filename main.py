@@ -82,7 +82,7 @@ for i, tag in enumerate(tag_to_files.keys()):
 for tag, clicked in tag_to_button.items():
     if clicked:
         st.write(f":green[To chat about {tag} go to the page shown in the sidebar]")
-        st.session_state['chat_config'] = ChatConfig(tag=tag)
+        st.session_state['chat_config'] = ChatConfig(tag=tag, llm_choice="groq")  # Set initial choice to "groq"
         st.sidebar.page_link('pages/chat_page.py', label='chatting page')
 
 # URI = 'bolt://localhost'   # neo4j:// also works

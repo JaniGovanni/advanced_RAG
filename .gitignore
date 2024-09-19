@@ -8,4 +8,5 @@ app/.env
 app/data
 ML_OPS/
 create_EC2.py
+data/
 

@@ -4,6 +4,11 @@ from langchain_core.messages import AIMessage, HumanMessage
 
 st.header("chat with the docs from a tag")
 
+# LLM selection
+llm_choice = st.radio("Choose LLM", ("groq", "ollama"))
+st.session_state['chat_config'].llm_choice = llm_choice
+st.session_state['chat_config'].llm = st.session_state['chat_config'].get_llm()
+
 # define rag options
 
 st.session_state['chat_config'].history_awareness(st.checkbox("Use history awareness", value=1))
