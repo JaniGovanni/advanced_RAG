@@ -9,4 +9,9 @@ app/data
 ML_OPS/
 create_EC2.py
 data/
-
+app/TEST_chat.py
+app/TEST_doc_processing_notebook.ipynb
+app/TEST_vectorstore_and_doc_processing.py
+app/TEST_multivectorstore.py
+app/TEST_multivectorstore_2.py
+app/TEST_history_aware_query.py

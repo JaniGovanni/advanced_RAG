@@ -8,6 +8,7 @@ from app.vectorstore import (get_chroma_store_as_retriever,
                              add_docs_to_store,
                              delete_file_from_store)
 from app.chat import get_result_docs, ChatConfig, create_RAG_output
+import app.llm
 
 # inspired by
 # https://github.com/langchain-ai/langchain/blob/master/cookbook/Semi_Structured_RAG.ipynb?ref=blog.langchain.dev

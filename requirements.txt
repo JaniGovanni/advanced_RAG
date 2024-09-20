@@ -203,3 +203,4 @@ xlrd==2.0.1
 XlsxWriter==3.2.0
 yarl==1.9.6
 zipp==3.20.1
+deepeval==0.1.1

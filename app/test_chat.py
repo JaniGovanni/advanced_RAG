@@ -1,3 +1,13 @@
+import sys
+import os
+
+# Get the current working directory
+current_dir = os.getcwd()
+
+# Add the parent directory to the system path
+#parent_dir = os.path.dirname(current_dir)
+sys.path.append(current_dir)
+
 from app.chat import get_result_docs, ChatConfig, create_RAG_output
 import app.llm
 import os
@@ -11,7 +21,7 @@ query = "What is attention?"
 # general usecases, so multi query might better work
 config_multi_query = ChatConfig(tag='attention',
                                 k=10,
-                                llm=app.llm.get_groq_llm()
+                                llm=app.llm.get_ollama_llm()
                                 )
 config_multi_query.history_awareness(False)
 config_multi_query.set_mult_queries(True)
@@ -23,3 +33,5 @@ result_texts, joint_query = get_result_docs(config_multi_query, query=query)
 context = ''.join(result_texts)
 
 final_answer = create_RAG_output(context, query, config_multi_query.llm)
+
+print(final_answer)

@@ -104,7 +104,7 @@ class ProcessDocConfig:
 def process_doc(config):
     # if local -> get_ollama_llm
     # if not -> get_groq_llm
-    llm = app.llm.get_groq_llm()
+    llm = app.llm.get_ollama_llm()
     if config.local:
 
         pdf_elements = partition(filename=config.filepath,
