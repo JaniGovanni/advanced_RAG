@@ -4,15 +4,7 @@ from app.doc_processing.filters import (unwanted_titles_list_default,
                                         unwanted_categories_default)
 from app.vectorstore import get_chroma_store_as_retriever, add_docs_to_store
 
-# 1. page: file page, with uploaded files, tags
-# here there hase to be 2 options, go to chat window with the files under 1 tag or upload a new file
-# it should be also possible to delete a file from a tag
-# second option must be to upload a new file, after uploading, this page must be entered for doc
-# processing
 
-
-# is arlready instantiated at this point, during file upload
-# so only for testing purposes
 if 'unwanted_titles' and 'unwanted_categories' not in st.session_state:
     st.session_state['unwanted_titles'] = unwanted_titles_list_default
     st.session_state['unwanted_categories'] = unwanted_categories_default

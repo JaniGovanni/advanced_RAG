@@ -5,7 +5,9 @@ from langchain_groq import ChatGroq
 
 dotenv.load_dotenv()
 def get_ollama_llm():
-    return ChatOllama(model="phi3.5", temperature=0)
+    return ChatOllama(model="phi3.5",
+                      temperature=0,
+                      base_url=os.getenv('OLLAMA_BASE_URL'))
 
 def get_groq_llm():
     llm = ChatGroq(

@@ -5,14 +5,17 @@ import streamlit as st
 from app.vectorstore import get_chroma_store_as_retriever, get_stored_files_and_tags, get_stored_tags_and_files
 from app.doc_processing import ProcessDocConfig
 from app.chat import ChatConfig
+from dotenv import load_dotenv
+
+load_dotenv()
 
 def save_file(file):
     """
     saves the uploaded file in a specified directory
     """
-    if not os.path.exists('uploaded_files'):
-        os.makedirs('uploaded_files')
-    filepath = os.path.join('uploaded_files', file.name)
+    if not os.path.exists(os.getenv('UPLOADED_FILES_PATH')):
+        os.makedirs(os.getenv('UPLOADED_FILES_PATH'))
+    filepath = os.path.join(os.getenv('UPLOADED_FILES_PATH'), file.name)
     with open(filepath, 'wb') as f:
         f.write(file.getbuffer())
     st.success('file saved.')

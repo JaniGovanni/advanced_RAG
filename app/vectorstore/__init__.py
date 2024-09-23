@@ -5,8 +5,35 @@ import os
 from uuid import uuid4
 import json
 from langchain_community.vectorstores.utils import filter_complex_metadata
+from langchain_core.documents import Document
+
 
 load_dotenv()
+
+def get_documents_by_tag(retriever, tag):
+    """
+    Retrieves all documents from the vectorstore that have a specific tag.
+    
+    :param retriever: The retriever object containing the vectorstore
+    :param tag: The tag to filter documents by
+    :return: A list of Document objects with the specified tag
+    """
+    # Assuming retriever.vectorstore is a Chroma instance
+    collection = retriever.vectorstore._collection
+
+    # Get all documents for the given tag using Chroma's where clause
+    results = collection.get(
+        where={"tag": tag},
+        include=['metadatas', 'documents']
+    )
+
+    # Create Document objects from the results
+    documents = [
+        Document(page_content=doc, metadata=metadata) 
+        for doc, metadata in zip(results['documents'], results['metadatas'])
+    ]
+
+    return documents
 
 
 def get_chroma_store_as_retriever():
@@ -15,7 +42,8 @@ def get_chroma_store_as_retriever():
     :return: chroma vectorstore setup with Ollama embeddings
     """
     embeddings = OllamaEmbeddings(model="nomic-embed-text",
-                                  show_progress=True)
+                                  show_progress=True,
+                                  base_url=os.getenv('OLLAMA_BASE_URL'))
     vectorstore = Chroma(persist_directory=os.getenv("CHROMA_PATH"),
                          embedding_function=embeddings)
 

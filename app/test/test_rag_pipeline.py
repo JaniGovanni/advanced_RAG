@@ -8,6 +8,9 @@ from app.chat import get_result_docs, ChatConfig, create_RAG_output
 import app.llm
 from app.doc_processing import process_doc, ProcessDocConfig
 from app.vectorstore import get_chroma_store_as_retriever, add_docs_to_store
+import shutil
+
+# to run: python -m unittest app.test.test_rag_pipeline
 
 # This is an example, who an RAG pipeline test could look like.
 # The test is not perfect, but it is a good starting point.
@@ -16,7 +19,7 @@ from app.vectorstore import get_chroma_store_as_retriever, add_docs_to_store
 dotenv.load_dotenv('app/.env')
 
 def evaluate_answer(query, answer):
-    client = Groq(api_key=os.getenv("GROQ_API_KEY"))
+    llm = app.llm.get_groq_llm()
     prompt = f"""
     Query: {query}
     Answer: {answer}
@@ -32,18 +35,8 @@ def evaluate_answer(query, answer):
     Output only the numeric score.
     """
     
-    response = client.chat.completions.create(
-        messages=[
-            {
-                "role": "user",
-                "content": prompt
-            }
-        ],
-        model="llama-3.1-70b-versatile",
-        temperature=0.1,
-    )
-    
-    return int(response.choices[0].message.content.strip())
+    response = llm.predict(prompt)
+    return int(response.strip())
 
 class TestChatRelevance(unittest.TestCase):
 
@@ -59,6 +52,14 @@ class TestChatRelevance(unittest.TestCase):
         docs = process_doc(pdf_config)
         cls.retriever = get_chroma_store_as_retriever()
         add_docs_to_store(cls.retriever, docs)
+    
+    @classmethod
+    def tearDownClass(cls):
+        # Clean up the data directory
+        data_dir = os.getenv("CHROMA_PATH")
+        if os.path.exists(data_dir):
+            shutil.rmtree(data_dir)
+        print(f"Cleaned up {data_dir} directory")
 
     def test_document_processing_and_storage(self):
         # Perform a similarity search to check if documents were added correctly

@@ -1,4 +1,4 @@
-from app.vectorstore import get_chroma_store_as_retriever
+from app.vectorstore import get_chroma_store_as_retriever, get_documents_by_tag
 from langchain_community.llms import Ollama
 import app.llm
 from app.chains import HistoryAwareQueryChain
@@ -7,6 +7,11 @@ import app.RAG_techniques as RAG_techniques
 from langchain.memory import (ConversationBufferWindowMemory,
                               ConversationBufferMemory)
 from langchain_core.messages import HumanMessage
+from langchain_community.retrievers import BM25Retriever
+from langchain_core.documents import Document
+import time
+
+
 
 # every tag needs a seperate chat history: tag needs to be stored in FileChatMessageHistory
 # there should be an option to delete the history for a tag (or create an extra one)
@@ -21,6 +26,7 @@ class ChatConfig:
     memory: ConversationBufferWindowMemory | ConversationBufferWindowMemory
     history_chain: HistoryAwareQueryChain
     llm_choice: str  # Add this line
+    bm25_retriever: BM25Retriever
 
     def __init__(self,
                  tag,
@@ -29,17 +35,19 @@ class ChatConfig:
                  reranking=True,
                  llm=None,
                  k=10,
-                 llm_choice="groq"):
+                 llm_choice="groq",
+                 use_bm25=False):
         self.tag = tag
         self.expand_by_answer = expand_by_answer
         self.expand_by_mult_queries = expand_by_mult_queries
         self.reranking = reranking
         self.k = k
-        self.llm_choice = llm_choice  # Add this line
+        self.llm_choice = llm_choice
+        self.use_bm25 = use_bm25
         if llm:
             self.llm = llm
         else:
-            self.llm = self.get_llm()  # Change this line
+            self.llm = self.get_llm()  
         #self.memory = build_window_buffer_memory(tag=self.tag)
         self.memory = ConversationBufferWindowMemory(memory_key="history",
                                                      output_key="response",
@@ -53,7 +61,8 @@ class ChatConfig:
         else:
             self.history_aware = False
 
-
+    def set_use_bm25(self, flag):
+        self.use_bm25 = flag
     def set_mult_queries(self, flag):
         self.expand_by_mult_queries = flag
 
@@ -82,6 +91,7 @@ def get_result_docs(ChatConfig, query):
     else:
         # in case the chain doesnt append the query to the messageHistory
         ChatConfig.memory.chat_memory.messages.append(HumanMessage(content=orig_query))
+    
 
     if ChatConfig.expand_by_mult_queries:
         generated_queries = RAG_techniques.generate_multi_query(query=query,
@@ -103,6 +113,22 @@ def get_result_docs(ChatConfig, query):
                                                          k=ChatConfig.k,
                                                          filter=search_filter)
         joint_query = query
+    if ChatConfig.use_bm25:
+        # it isnt optimal to do this for every query. Better is in the init method
+        # of chatConfig. Adjust this.
+        #start_time = time.time()
+        all_docs = get_documents_by_tag(retriever, ChatConfig.tag)
+        bm25_retriever = BM25Retriever.from_documents([Document(page_content=doc.page_content, metadata=doc.metadata) for doc in all_docs])
+        end_time = time.time()
+        #print(f"Time taken to create BM25Retriever: {end_time - start_time} seconds")
+        
+        # Combine results from both retrievers
+        bm25_results = bm25_retriever.get_relevant_documents(query)
+        
+        # Merge and deduplicate results
+        combined_results = list({doc.page_content: doc for doc in result + bm25_results}.values())
+        result = combined_results[:ChatConfig.k]
+
 
     result_texts = [re.page_content for re in result]
 

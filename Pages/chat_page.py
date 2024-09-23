@@ -18,6 +18,7 @@ st.session_state['chat_config'].set_mult_queries(st.checkbox("formulate multiple
                                                              value=0))
 st.session_state['chat_config'].set_reranking(st.checkbox("Perform an reranking of the founded documents based on relevance, by an crossencoder",
                                                           value=1))
+st.session_state['chat_config'].set_use_bm25(st.checkbox("Use BM25 for keyword search", value=0))
 
 user_query = st.chat_input("Type your message here...")
 if user_query is not None and user_query != "":

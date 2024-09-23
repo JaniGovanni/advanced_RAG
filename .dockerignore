@@ -1,13 +1,8 @@
-# Ignorierte Verzeichnisse und Datei
 knowledge-graph-rag/
 course/
 Streamlit/
 uploaded_files/
 dev_tests/
-app/.env
 app/data
 ML_OPS/
-create_EC2.py
 data/
-docker_options/
-
