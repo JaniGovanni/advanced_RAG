@@ -18,50 +18,8 @@ from langchain_experimental.graph_transformers import LLMGraphTransformer
 import logging
 import os
 import dotenv
-
+from app.contextual_embedding import situate_context
 dotenv.load_dotenv()
-
-
-def extract_knowledge_graph(pdf_chunks, llm):
-    """
-    Extracts a knowledge graph from a list of PDF chunks (Langchain documents) and returns a Neo4j graph object.
-    """
-    # only possible via api
-    graph = None
-    
-    try:
-        # Initialize Neo4j graph
-        graph = Neo4jGraph(
-            url=os.getenv("NEO4J_URI"),
-            username=os.getenv("NEO4J_USERNAME"),
-            password=os.getenv("NEO4J_PASSWORD"),
-            database=os.getenv("NEO4J_DATABASE"),
-        )
-        
-        # Initialize LLMGraphTransformer
-        graph_transformer = LLMGraphTransformer.from_llm(llm=llm)
-        
-        # Process each chunk and extract entities and relationships
-        for chunk in pdf_chunks:
-            try:
-                graph_documents = graph_transformer.convert_to_graph_documents([chunk])
-                for graph_document in graph_documents:
-                    graph.add_graph_documents([graph_document])
-                
-            except Exception as e:
-                logging.error(f"Error processing chunk: {e}")
-                continue  # Skip to the next chunk if there's an error
-        
-        return graph
-    except Exception as e:
-        logging.error(f"Error in knowledge graph extraction: {e}")
-        return None
-    finally:
-        if graph:
-            try:
-                graph.close()
-            except Exception as e:
-                logging.error(f"Error closing Neo4j connection: {e}")
 
 
 
@@ -74,8 +32,7 @@ class ProcessDocConfig:
     url: str | None
     source: str
     search_by_summaries: bool
-    extract_knowledge_graph: bool
-    # language could be added for improved ocr
+    situate_context: bool  # New attribute to indicate if context should be situated
 
     def __init__(self,
                  tag,
@@ -85,7 +42,7 @@ class ProcessDocConfig:
                  filepath=None,
                  url=None,
                  search_by_summaries=False,
-                 extract_knowledge_graph=False
+                 situate_context=False  # Initialize the new attribute
                  ):
         self.local = local
         self.unwanted_titles_list = unwanted_titles_list
@@ -94,7 +51,7 @@ class ProcessDocConfig:
         self.filepath = filepath
         self.url = url
         self.search_by_summaries = search_by_summaries   # is not recommended
-        self.extract_knowledge_graph = extract_knowledge_graph
+        self.situate_context = situate_context  # Set the new attribute
         if filepath is not None:
             self.source = os.path.basename(filepath)
         else:
@@ -136,10 +93,15 @@ def process_doc(config):
     else:
         summaries = []
     pdf_chunks = convert_to_document(elements=pdf_chunks, tag=config.tag, summaries=summaries)
-    if config.extract_knowledge_graph:
-        knowledge_graph = extract_knowledge_graph(pdf_chunks, llm)
+    
+    if config.situate_context:
+        doc_contents = [chunk.metadata['content'] for chunk in pdf_chunks]
+        chunk_contents = [chunk.content for chunk in pdf_chunks]
+        situated_contexts = situate_context(doc_contents, chunk_contents)
+        combined_document = "\n\n".join(situated_contexts)
     else:
-        knowledge_graph = None
+        combined_document = "\n\n".join([chunk.content for chunk in pdf_chunks])
+
 
     return pdf_chunks
 
