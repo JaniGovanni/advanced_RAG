@@ -46,8 +46,7 @@ class TestChatRelevance(unittest.TestCase):
         pdf = '/Users/jan/Desktop/advanced_rag/dev_tests/test_data/attention_is_all.pdf'
         table_processing = ['Header', 'Footer', 'Image', 'FigureCaption', 'Formula']
         pdf_config = ProcessDocConfig(filepath=pdf, tag='attention',
-                                      unwanted_categories_list=table_processing,
-                                      search_by_summaries=False)
+                                      unwanted_categories_list=table_processing)
 
         docs = process_doc(pdf_config)
         cls.retriever = get_chroma_store_as_retriever()
@@ -84,7 +83,6 @@ class TestChatRelevance(unittest.TestCase):
         final_answer = create_RAG_output(context, query, config_multi_query.llm)
 
         score = evaluate_answer(query, final_answer)
-        
         # Assert that the score is above a certain threshold (e.g., 70)
         self.assertGreaterEqual(score, 70, f"The answer relevance score ({score}) is below the acceptable threshold.")
 
@@ -95,8 +93,8 @@ class TestChatRelevance(unittest.TestCase):
                                         k=10,
                                         llm=app.llm.get_groq_llm())
         config_multi_query.history_awareness(False)
-        config_multi_query.set_mult_queries(False)
-        config_multi_query.set_reranking(False)
+        config_multi_query.set_mult_queries(True)
+        config_multi_query.set_reranking(True)
         config_multi_query.set_exp_by_answer(False)
 
         result_texts, joint_query = get_result_docs(config_multi_query, query=query)

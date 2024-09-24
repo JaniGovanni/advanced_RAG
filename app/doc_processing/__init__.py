@@ -9,17 +9,12 @@ from app.doc_processing.filters import (filter_elements_by_title,
                                         unwanted_categories_default)
 from app.doc_processing.metadata import convert_to_document
 from langchain_ollama import ChatOllama
-from langchain.prompts import ChatPromptTemplate
-from langchain.schema.output_parser import StrOutputParser
 import app.llm
-from langchain.graphs import Neo4jGraph
-from langchain.graphs.graph_document import GraphDocument, Node, Relationship
-from langchain_experimental.graph_transformers import LLMGraphTransformer
 import logging
 import os
 import dotenv
-from app.contextual_embedding import situate_context
-dotenv.load_dotenv()
+from app.contextual_embedding import create_contextual_embeddings_with_progress
+import streamlit as st
 
 
 
@@ -31,8 +26,7 @@ class ProcessDocConfig:
     filepath: str | None
     url: str | None
     source: str
-    search_by_summaries: bool
-    situate_context: bool  # New attribute to indicate if context should be situated
+    situate_context: bool  
 
     def __init__(self,
                  tag,
@@ -41,7 +35,6 @@ class ProcessDocConfig:
                  local=True,
                  filepath=None,
                  url=None,
-                 search_by_summaries=False,
                  situate_context=False  # Initialize the new attribute
                  ):
         self.local = local
@@ -50,7 +43,6 @@ class ProcessDocConfig:
         self.tag = tag
         self.filepath = filepath
         self.url = url
-        self.search_by_summaries = search_by_summaries   # is not recommended
         self.situate_context = situate_context  # Set the new attribute
         if filepath is not None:
             self.source = os.path.basename(filepath)
@@ -58,10 +50,8 @@ class ProcessDocConfig:
             self.source = url
 
 
-def process_doc(config):
-    # if local -> get_ollama_llm
-    # if not -> get_groq_llm
-    llm = app.llm.get_ollama_llm()
+def process_doc(config, progress_callback=None):
+    
     if config.local:
 
         pdf_elements = partition(filename=config.filepath,
@@ -86,44 +76,18 @@ def process_doc(config):
     pdf_elements = filter_elements_by_unwanted_categories(pdf_elements, config.unwanted_categories_list)
     # default values seems to be ok for this, max char value is 500
     pdf_chunks = chunk_by_title(pdf_elements)
-    if config.search_by_summaries:
-        # if table data is included it might be better to build
-        # table and text summaries for the similarity search
-        summaries = create_table_text_summaries(pdf_chunks, llm)
-    else:
-        summaries = []
-    pdf_chunks = convert_to_document(elements=pdf_chunks, tag=config.tag, summaries=summaries)
     
     if config.situate_context:
-        doc_contents = [chunk.metadata['content'] for chunk in pdf_chunks]
-        chunk_contents = [chunk.content for chunk in pdf_chunks]
-        situated_contexts = situate_context(doc_contents, chunk_contents)
-        combined_document = "\n\n".join(situated_contexts)
+        created_contents = create_contextual_embeddings_with_progress(pdf_chunks)
     else:
-        combined_document = "\n\n".join([chunk.content for chunk in pdf_chunks])
+        created_contents = []
+    
+    pdf_chunks = convert_to_document(elements=pdf_chunks,
+                                      tag=config.tag,
+                                      created_contents=created_contents)
 
+    if progress_callback:
+        progress_callback(100)  # Indicate completion
 
     return pdf_chunks
-
-
-def create_table_text_summaries(chunks, model):
-    """
-    Creates a summary for table and text chunks and adds this to the metadata
-    """
-    # maybe like this but doesnt seem necessary
-    # tables = [i.metadata.text_as_html for i in table_chunks]
-    # tables = [chunk for chunk in chunks if chunk.category == 'Table']
-    # texts = [chunk for chunk in chunks if chunk.category == 'CompositeElement']
-
-    prompt_text = """You are an assistant tasked with summarizing tables and text for retrieval. \
-        These summaries will be embedded and used to retrieve the raw text or table elements. \
-        Give a concise summary of the table or text that is well optimized for retrieval. Table or text: {element} """
-    prompt = ChatPromptTemplate.from_template(prompt_text)
-
-    summarize_chain = {"element": lambda x: x} | prompt | model | StrOutputParser()
-
-    # max_concurrency is batch size
-    summaries = summarize_chain.batch(chunks, {"max_concurrency": 5})
-
-    return summaries
 

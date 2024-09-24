@@ -10,4 +10,9 @@ ML_OPS/
 create_EC2.py
 data/
 docker_options/
-
+old_functions.py
+test_3.py
+test_2.py
+test.py
+delete.ipynb
+app/contextual_embedding/evaluation_set.jsonl

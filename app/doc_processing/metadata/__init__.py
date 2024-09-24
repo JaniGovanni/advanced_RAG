@@ -1,7 +1,7 @@
 from langchain_core.documents import Document
 
 
-def convert_to_document(elements, tag, summaries=None):
+def convert_to_document(elements, tag, created_contents=None):
     """
     Adds some metadata to the given chunks and convert them into
     langchain document objects for further storing.
@@ -13,19 +13,19 @@ def convert_to_document(elements, tag, summaries=None):
     :return: list of documents
     """
     documents = []
-    if not summaries:
+    if not created_contents:
         for element in elements:
             metadata = modify_metadata(element, tag)
             documents.append(Document(page_content=element.text,
                                       metadata=metadata))
     else:
-        for element, summary in zip(elements, summaries):
+        for element, content in zip(elements, created_contents):
             metadata = modify_metadata(element, tag)
             # original text becomes a metadata
             metadata['orig_text'] = element.text
             # this is a little workaround, instead of using a multi vectorstore.
             # found this approach better because the necessary structural changes are smaller
-            documents.append(Document(page_content=summary,
+            documents.append(Document(page_content=content,
                                       metadata=metadata))
     return documents
 

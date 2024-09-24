@@ -6,3 +6,9 @@ dev_tests/
 app/data
 ML_OPS/
 data/
+old_functions.py
+test_3.py
+test_2.py
+test.py
+delete.ipynb
+app/contextual_embedding/evaluation_set.jsonl
