@@ -13,6 +13,6 @@ docker_options/
 old_functions.py
 test_3.py
 test_2.py
-test.py
+advanced_rag/test.py
 delete.ipynb
 app/contextual_embedding/evaluation_set.jsonl
