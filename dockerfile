@@ -42,6 +42,7 @@ RUN mkdir -p /data
 CMD ["streamlit", "run", "main.py"]
 
 # Build the Docker image
+# docker login
 # docker build -t your-app-name .
 
 # Run the Docker container

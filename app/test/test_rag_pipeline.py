@@ -10,6 +10,12 @@ from app.doc_processing import process_doc, ProcessDocConfig
 from app.vectorstore import get_chroma_store_as_retriever, add_docs_to_store
 import shutil
 
+import sys
+import os
+
+# Add the project root directory to the Python path
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
+
 # to run: python -m unittest app.test.test_rag_pipeline
 
 # This is an example, who an RAG pipeline test could look like.
@@ -59,6 +65,30 @@ class TestChatRelevance(unittest.TestCase):
         if os.path.exists(data_dir):
             shutil.rmtree(data_dir)
         print(f"Cleaned up {data_dir} directory")
+
+    
+    def test_bm25_retrieval_with_bleu(self):
+        # Create a ChatConfig instance
+        chat_config = ChatConfig(
+            tag="attention",
+            use_bm25=True,
+            k=5,
+            llm_choice="groq",
+            reranking=False,
+        )
+
+        # Disable history awareness for this test
+        chat_config.history_awareness(False)
+
+        # Define a query
+        query = "This query is meant to confuse the similarity search, by randomly typing BLEU."
+
+        # Get the results
+        result_docs, joint_query = get_result_docs(chat_config, query)
+        bleu_docs = [doc for doc in result_docs if "BLEU" in doc]
+
+        # Assert that at least one document contains "BLEU"
+        self.assertGreater(len(bleu_docs), 0, "No documents containing 'BLEU' were retrieved")
 
     def test_document_processing_and_storage(self):
         # Perform a similarity search to check if documents were added correctly

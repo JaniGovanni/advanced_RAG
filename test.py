@@ -1,5 +1,6 @@
 from app.chat import ChatConfig, get_result_docs
 
+# test bm25
 def main():
     # Create a ChatConfig instance
     chat_config = ChatConfig(

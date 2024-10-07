@@ -7,13 +7,15 @@ from transformers import AutoTokenizer
 
 dotenv.load_dotenv()
 def get_ollama_llm():
-    return ChatOllama(model="phi3.5",
+    return ChatOllama(#model="phi3.5",
+                      model="llama3.2",
                       temperature=0,
                       base_url=os.getenv('OLLAMA_BASE_URL'))
 
 def get_groq_llm():
     llm = ChatGroq(
-        model="llama-3.1-70b-versatile",
+        #model="llama-3.1-70b-versatile",
+        model="llama-3.2-90b-text-preview",
         temperature=0,
         api_key=os.environ.get('GROQ_API_KEY')
     )
