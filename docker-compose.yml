@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  advanced-rag:
+    build: .
+    ports:
+      - "8501:8501"
+    environment:
+      - GROQ_API_KEY=${GROQ_API_KEY}
+      - OLLAMA_BASE_URL=http://host.docker.internal:11434
+    volumes:
+      - advanced_rag_storage:/data
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+volumes:
+  advanced_rag_storage:
+
+
+
+# export GROQ_API_KEY=your_groq_api_key

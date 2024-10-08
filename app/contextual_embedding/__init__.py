@@ -10,14 +10,8 @@ import json
 import time
 from tqdm import tqdm
 import streamlit as st
+from langchain_ollama import ChatOllama
 
-
-
-def load_jsonl(file_path: str):
-    """Load JSONL file and return a list of dictionaries."""
-    with open(file_path, 'r') as file:
-        return [json.loads(line) for line in file]
-    
 
 DOCUMENT_CONTEXT_PROMPT = """
 <document>
@@ -83,7 +77,10 @@ def create_contextual_embeddings(chunks, progress_callback=None):
     """
     adds context information to the chunks
     """
-    llm = app.llm.get_ollama_llm()
+    llm = ChatOllama(#model="phi3.5",
+                    model="llama3.2:1b",
+                    temperature=0,
+                    base_url=os.getenv('OLLAMA_BASE_URL'))
 
     combined_text = " ".join([chunk.text for chunk in chunks])
 
