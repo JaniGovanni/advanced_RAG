@@ -19,3 +19,4 @@ app/contextual_embedding/evaluation_set.jsonl
 app/test/custom_conversations/
 app/test/trying_out.ipynb
 app/test/relevance_results.json
+notes.txt
