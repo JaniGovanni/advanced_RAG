@@ -23,6 +23,19 @@ class TestRAGEvaluation(unittest.TestCase):
         cls.retriever = get_chroma_store_as_retriever()
         cls.evaluation_data = cls.load_jsonl('app/test/evaluation_set.jsonl', num_lines=10)
         cls.add_golden_docs_to_store()
+    @classmethod
+    def create_test_chat_config(cls):
+        config = ChatConfig(
+            tag="test",
+            k=10,
+            llm=app.llm.get_groq_llm(),
+            expand_by_answer=False,
+            expand_by_mult_queries=False,
+            reranking=True,
+            use_bm25=True
+    )
+        config.history_awareness(False)
+        return config
 
 
     @staticmethod
@@ -69,35 +82,33 @@ class TestRAGEvaluation(unittest.TestCase):
             shutil.rmtree(data_dir)
         print(f"Cleaned up {data_dir} directory")
 
-    
-    # def test_retrieval_accuracy(self):
-    #     for entry in self.evaluation_data:
-    #         query = entry['query']
-    #         golden_docs = entry['golden_documents']
-            
-    #         config = ChatConfig(tag="test", k=5, llm=app.llm.get_ollama_llm())
-    #         result_docs, _ = get_result_docs(config, query)
-            
-    #     # Check if any of the retrieved documents match the golden documents
-    #     retrieved_content = [doc.page_content for doc in result_docs]
-    #     golden_content = [doc['content'] for doc in golden_docs]
-        
-    #     self.assertTrue(any(gold in retrieved for gold in golden_content for retrieved in retrieved_content),
-    #                     f"Failed to retrieve golden document for query: {query}")
 
     def test_answer_relevance(self):
         relevance_scores = []
         results = []
+        
+        # Create the test chat config
+        chat_config = self.create_test_chat_config()
+        
+        # Prepare the config properties to be written to JSON
+        config_properties = {
+            "tag": chat_config.tag,
+            "k": chat_config.k,
+            "llm_choice": chat_config.llm_choice,
+            "expand_by_answer": chat_config.expand_by_answer,
+            "expand_by_mult_queries": chat_config.expand_by_mult_queries,
+            "reranking": chat_config.reranking,
+            "use_bm25": chat_config.use_bm25,
+            "history_aware": chat_config.history_aware
+        }
 
         for entry in self.evaluation_data:
             query = entry['query']
             expected_answer = entry['answer']
         
-            config = ChatConfig(tag="test", k=5, llm=app.llm.get_groq_llm())
-            config.history_awareness(False)
-            result_docs, _ = get_result_docs(config, query)
+            result_docs, _ = get_result_docs(chat_config, query)
             context = ''.join(result_docs)
-            final_answer = create_RAG_output(context, query, config.llm)
+            final_answer = create_RAG_output(context, query, chat_config.llm)
         
             relevance_score = evaluate_answer(query, final_answer, expected_answer)
             relevance_scores.append(relevance_score)
@@ -110,29 +121,24 @@ class TestRAGEvaluation(unittest.TestCase):
             })
 
         average_score = sum(relevance_scores) / len(relevance_scores)
-        # Write results to a JSON file
+        
+        # Write results to a JSON file, including the chat config properties
+        output = {
+            "chat_config": config_properties,
+            "results": results,
+            "average_score": average_score
+        }
+        
         with open('/Users/jan/Desktop/advanced_rag/app/test/relevance_results.json', 'w') as f:
-            json.dump(results, f, indent=2)
+            json.dump(output, f, indent=2)
 
         print(f"Average relevance score: {average_score:.2f}")
         print("Detailed results have been saved to 'relevance_results.json'")
         # Assert the average score
         self.assertGreaterEqual(average_score, 40,
                                 f"Low average relevance score ({average_score:.2f})")
-
-    # def test_processing_time(self):
-    #     import time
-    #     for entry in self.evaluation_data:
-    #         query = entry['query']
-            
-    #         start_time = time.time()
-    #         config = ChatConfig(tag="test", k=5, llm=app.llm.get_groq_llm())
-    #     _, _ = get_result_docs(config, query)
-    #     end_time = time.time()
         
-    #     processing_time = end_time - start_time
-    #     self.assertLess(processing_time, 10,  # Adjust the threshold as needed
-    #                     f"Processing time too long ({processing_time:.2f}s) for query: {query}")
-
 if __name__ == '__main__':
     unittest.main()
+
+# python -m unittest app/test/test_rag_evaluation.py

@@ -77,7 +77,8 @@ def create_contextual_embeddings(chunks, progress_callback=None):
     """
     adds context information to the chunks
     """
-    llm = ChatOllama(#model="phi3.5",
+    # without context caching, this is simply not viable to do via API
+    llm = ChatOllama(
                     model="llama3.2:1b",
                     temperature=0,
                     base_url=os.getenv('OLLAMA_BASE_URL'))
@@ -87,7 +88,7 @@ def create_contextual_embeddings(chunks, progress_callback=None):
     # Estimate the number of tokens (roughly equal to number of chars //4)
     estimated_tokens = len(combined_text) // 4
 
-    # phi3.5 and llama3.1 both have context window sizes over 100k tokens
+    # llama3.2 has context window sizes over 100k tokens, so this should work
     context_window_size = 100000 # leave space for further prompt
 
     # Check if the estimated tokens exceed the context window size

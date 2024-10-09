@@ -2,7 +2,6 @@ from app.vectorstore import get_chroma_store_as_retriever, get_documents_by_tag
 from langchain_community.llms import Ollama
 import app.llm
 from app.chains import HistoryAwareQueryChain
-from app.memory import build_window_buffer_memory, build_conversation_buffer_memory
 import app.RAG_techniques as RAG_techniques
 from langchain.memory import (ConversationBufferWindowMemory,
                               ConversationBufferMemory)
@@ -48,7 +47,6 @@ class ChatConfig:
             self.llm = llm
         else:
             self.llm = self.get_llm()  
-        #self.memory = build_window_buffer_memory(tag=self.tag)
         self.memory = ConversationBufferWindowMemory(memory_key="history",
                                                      output_key="response",
                                                      return_messages=True,

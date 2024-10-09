@@ -1,0 +1,6 @@
+for unstructured you have to install sudo apt install libmagic1 poppler-utils libreoffice pandoc tesseract-ocr
+
+on mac and windows it is better to run ollama outside a container, because
+there is a performance decrease, because the docker container must also 
+run a linux virtual machine to run the ollama server. On linux this is not necessary.
+Also on mac, there seems to be no way for a container to access the GPU
