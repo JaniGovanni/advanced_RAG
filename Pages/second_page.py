@@ -41,20 +41,10 @@ st.session_state['process_config'].situate_context = st.checkbox("Create context
 go_further = st.button("Click when finished")
 
 if go_further:
-    retriever = get_chroma_store_as_retriever()
-    
-    # Create a placeholder for the progress bar
-    progress_placeholder = st.empty()
-    
-    # Wrap process_doc with tqdm and update Streamlit progress
-    with tqdm(total=100) as pbar:
-        def update_progress(value):
-            pbar.update(value - pbar.n)
-            progress_placeholder.progress(value / 100)
-        
-        processed_docs = process_doc(st.session_state['process_config'], progress_callback=update_progress)
-    
-    add_docs_to_store(retriever, processed_docs)
+    with st.spinner("Processing documents and updating the database..."):
+        retriever = get_chroma_store_as_retriever()
+        processed_docs = process_doc(st.session_state['process_config'])
+        add_docs_to_store(retriever, processed_docs)
     st.subheader("Finished processing. Go to the page shown in the sidebar")
     st.sidebar.page_link('main.py', label='Home')
 

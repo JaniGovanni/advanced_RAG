@@ -50,7 +50,7 @@ class ProcessDocConfig:
             self.source = url
 
 
-def process_doc(config, progress_callback=None):
+def process_doc(config):
     
     if config.local:
 
@@ -85,9 +85,5 @@ def process_doc(config, progress_callback=None):
     pdf_chunks = convert_to_document(elements=pdf_chunks,
                                       tag=config.tag,
                                       created_contents=created_contents)
-
-    if progress_callback:
-        progress_callback(100)  # Indicate completion
-
     return pdf_chunks
 

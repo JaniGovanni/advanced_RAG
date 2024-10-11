@@ -75,6 +75,7 @@ class TestChatRelevance(unittest.TestCase):
             k=5,
             llm_choice="groq",
             reranking=False,
+            expand_by_mult_queries=False,
         )
 
         # Disable history awareness for this test

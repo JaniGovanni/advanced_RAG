@@ -21,7 +21,7 @@ class TestRAGEvaluation(unittest.TestCase):
     def setUpClass(cls):
         # Set up the document processing and store creation
         cls.retriever = get_chroma_store_as_retriever()
-        cls.evaluation_data = cls.load_jsonl('app/test/evaluation_set.jsonl', num_lines=10)
+        cls.evaluation_data = cls.load_jsonl('app/test/evaluation_set.jsonl', num_lines=20)
         cls.add_golden_docs_to_store()
     @classmethod
     def create_test_chat_config(cls):
@@ -32,7 +32,7 @@ class TestRAGEvaluation(unittest.TestCase):
             expand_by_answer=False,
             expand_by_mult_queries=False,
             reranking=True,
-            use_bm25=True
+            use_bm25=False
     )
         config.history_awareness(False)
         return config
