@@ -15,6 +15,7 @@ import os
 import dotenv
 from app.contextual_embedding import create_contextual_embeddings_with_progress
 import streamlit as st
+from app.doc_processing.late_chunking import apply_late_chunking  
 
 
 
@@ -26,7 +27,8 @@ class ProcessDocConfig:
     filepath: str | None
     url: str | None
     source: str
-    situate_context: bool  
+    situate_context: bool
+    late_chunking: bool
 
     def __init__(self,
                  tag,
@@ -35,7 +37,8 @@ class ProcessDocConfig:
                  local=True,
                  filepath=None,
                  url=None,
-                 situate_context=False  # Initialize the new attribute
+                 situate_context=False,
+                 late_chunking=False  
                  ):
         self.local = local
         self.unwanted_titles_list = unwanted_titles_list
@@ -43,7 +46,8 @@ class ProcessDocConfig:
         self.tag = tag
         self.filepath = filepath
         self.url = url
-        self.situate_context = situate_context  # Set the new attribute
+        self.situate_context = situate_context
+        self.late_chunking = late_chunking  
         if filepath is not None:
             self.source = os.path.basename(filepath)
         else:
@@ -53,28 +57,16 @@ class ProcessDocConfig:
 def process_doc(config):
     
     if config.local:
-
         pdf_elements = partition(filename=config.filepath,
                                  strategy="hi_res",
                                  hi_res_model_name="yolox",
-                                 # the document (pdf, html,..) types, for which table elements should not be extracted
                                  skip_infer_table_types=[],
-                                 # if document should be loaded from url (like html)
-                                 url=config.url,
-                                 # language could be added for improved ocr
-                                 # all of these categories will saved under 'extract_image_block_output_dir' or encoded within metadata
-                                 #extract_image_block_types=['Table', 'Image'],
-                                 # direction for extracted image block types, crucial for multimodal RAG
-                                 #extract_image_block_output_dir = '/Users/jan/Desktop/advanced_rag/dev_tests/test_data/extracted_categories'
-                                 )
+                                 url=config.url)
     else:
         pdf_elements = process_api(config.filepath)
 
-    # filter unwanted sections of the document grouped under specific titles
     pdf_elements = filter_elements_by_title(pdf_elements, config.unwanted_titles_list)
-    # filter unwanted elements contained in a specific section
     pdf_elements = filter_elements_by_unwanted_categories(pdf_elements, config.unwanted_categories_list)
-    # default values seems to be ok for this, max char value is 500
     pdf_chunks = chunk_by_title(pdf_elements)
     
     if config.situate_context:
@@ -83,7 +75,12 @@ def process_doc(config):
         created_contents = []
     
     pdf_chunks = convert_to_document(elements=pdf_chunks,
-                                      tag=config.tag,
-                                      created_contents=created_contents)
+                                     tag=config.tag,
+                                     created_contents=created_contents)
+    
+    if config.late_chunking:
+        # Apply late chunking after convert_to_document
+        pdf_chunks = apply_late_chunking(pdf_chunks)
+    
     return pdf_chunks
 

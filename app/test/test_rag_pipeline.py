@@ -67,29 +67,44 @@ class TestChatRelevance(unittest.TestCase):
         print(f"Cleaned up {data_dir} directory")
 
     
-    def test_bm25_retrieval_with_bleu(self):
+    def test_bm25_retrieval_effectiveness(self):
         # Create a ChatConfig instance
         chat_config = ChatConfig(
-            tag="attention",
-            use_bm25=True,
-            k=5,
-            llm_choice="groq",
-            reranking=False,
-            expand_by_mult_queries=False,
-        )
+        tag="attention",
+        use_bm25=True,
+        k=5,
+        llm_choice="groq",
+        reranking=False,
+        expand_by_mult_queries=False)
 
         # Disable history awareness for this test
         chat_config.history_awareness(False)
 
-        # Define a query
-        query = "This query is meant to confuse the similarity search, by randomly typing BLEU."
+        # Define a query that is likely to be challenging for pure vector similarity search
+        query = "What are the computational requirements for the Transformer model?"
 
-        # Get the results
-        result_docs, joint_query = get_result_docs(chat_config, query)
-        bleu_docs = [doc for doc in result_docs if "BLEU" in doc]
+        # Get the results with BM25 enabled
+        result_docs_with_bm25, _ = get_result_docs(chat_config, query)
 
-        # Assert that at least one document contains "BLEU"
-        self.assertGreater(len(bleu_docs), 0, "No documents containing 'BLEU' were retrieved")
+        # Disable BM25 and get results with only similarity search
+        chat_config.use_bm25 = False
+        result_docs_without_bm25, _ = get_result_docs(chat_config, query)
+
+        # Function to check if a document is relevant
+        def is_relevant(doc):
+            relevant_terms = ['computational', 'requirements', 'complexity', 'efficiency', 'hardware', 'gpu', 'memory']
+            return any(term in doc.lower() for term in relevant_terms)
+
+        # Count relevant documents in each result set
+        relevant_with_bm25 = sum(1 for doc in result_docs_with_bm25 if is_relevant(doc))
+        relevant_without_bm25 = sum(1 for doc in result_docs_without_bm25 if is_relevant(doc))
+
+        # Assert that BM25 retrieval finds more relevant documents
+        self.assertGreater(relevant_with_bm25, relevant_without_bm25, 
+                        "BM25 retrieval did not improve the relevance of search results")
+
+        print(f"Relevant docs with BM25: {relevant_with_bm25}")
+        print(f"Relevant docs without BM25: {relevant_without_bm25}")
 
     def test_document_processing_and_storage(self):
         # Perform a similarity search to check if documents were added correctly

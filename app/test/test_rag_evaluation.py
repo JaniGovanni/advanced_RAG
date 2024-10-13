@@ -30,7 +30,7 @@ class TestRAGEvaluation(unittest.TestCase):
             k=10,
             llm=app.llm.get_groq_llm(),
             expand_by_answer=False,
-            expand_by_mult_queries=False,
+            expand_by_mult_queries=True,
             reranking=True,
             use_bm25=False
     )

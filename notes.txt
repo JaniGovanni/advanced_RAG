@@ -4,3 +4,5 @@ on mac and windows it is better to run ollama outside a container, because
 there is a performance decrease, because the docker container must also 
 run a linux virtual machine to run the ollama server. On linux this is not necessary.
 Also on mac, there seems to be no way for a container to access the GPU
+
+jina api jina_31bf3288e9494ac69db2cd6a25eaba10vfnAa-YJt4PmS6qUOJfQ7ih-pH64
