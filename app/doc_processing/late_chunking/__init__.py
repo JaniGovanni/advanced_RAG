@@ -1,5 +1,6 @@
 from transformers import AutoModel, AutoTokenizer
 import torch
+from app.vectorstore.embeddings import JinaEmbeddings
 
 
 def late_chunking(
@@ -61,7 +62,7 @@ def get_span_annotations(docs, tokenizer):
 
 def apply_late_chunking(docs):
     """
-    Apply late chunking to a list of documents.
+    Apply late chunking to a list of langchain documents.
 
     This function combines the content of all documents, applies a transformer model
     to generate embeddings, and then uses late chunking to create embeddings for
@@ -75,8 +76,10 @@ def apply_late_chunking(docs):
     """
     complete_text = " ".join(doc.page_content for doc in docs)
 
-    tokenizer = AutoTokenizer.from_pretrained('jinaai/jina-embeddings-v2-small-en', trust_remote_code=True)
-    model = AutoModel.from_pretrained('jinaai/jina-embeddings-v2-small-en', trust_remote_code=True)
+    jina_embeddings = JinaEmbeddings()
+    tokenizer = jina_embeddings.tokenizer
+    model = jina_embeddings.model
+
     inputs = tokenizer(complete_text, return_tensors='pt', truncation=False)
     model_output = model(**inputs)
 

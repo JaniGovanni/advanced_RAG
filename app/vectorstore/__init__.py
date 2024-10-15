@@ -37,14 +37,13 @@ def get_documents_by_tag(retriever, tag):
     return documents
 
 
-def get_chroma_store_as_retriever():
+def get_chroma_store_as_retriever(embeddings=None):
     """
     To easily create a vectorstore.
     :return: chroma vectorstore setup with appropriate embeddings
     """
-    
-  
-    embeddings = get_ollama_embeddings()
+    if embeddings is None:
+        embeddings = get_ollama_embeddings()
     
     vectorstore = Chroma(persist_directory=os.getenv("CHROMA_PATH"),
                          embedding_function=embeddings)
