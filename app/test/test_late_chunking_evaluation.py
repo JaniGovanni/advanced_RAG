@@ -7,36 +7,37 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '.
 import unittest
 import json
 from app.doc_processing import process_doc, ProcessDocConfig
-from app.vectorstore import get_chroma_store_as_retriever, add_docs_to_store
+from app.vectorstore.experimental import get_faiss_store_as_retriever, add_docs_to_faiss_store
 from app.chat import ChatConfig, get_result_docs, create_RAG_output
 import app.llm
 from app.test.end_to_end_eval import evaluate_answer
+from app.doc_processing.late_chunking import apply_late_chunking
 import tempfile
 import os
 import shutil
 
 
-class TestRAGEvaluation(unittest.TestCase):
+class TestLateChunkingEvaluation(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         # Set up the document processing and store creation
-        cls.retriever = get_chroma_store_as_retriever()
+        cls.retriever = get_faiss_store_as_retriever()
         cls.evaluation_data = cls.load_jsonl('app/test/evaluation_set.jsonl', num_lines=20)
         cls.add_golden_docs_to_store()
+
     @classmethod
     def create_test_chat_config(cls):
         config = ChatConfig(
-            tag="test",
+            tag="test_late_chunking",
             k=10,
             llm=app.llm.get_groq_llm(),
             expand_by_answer=False,
             expand_by_mult_queries=False,
             reranking=True,
             use_bm25=False
-    )
+        )
         config.history_awareness(False)
         return config
-
 
     @staticmethod
     def load_jsonl(file_path, num_lines=None):
@@ -62,18 +63,22 @@ class TestRAGEvaluation(unittest.TestCase):
 
                 try:
                     config = ProcessDocConfig(
-                        tag="test",
+                        tag="test_late_chunking",
                         local=True,
                         filepath=temp_file_path,
                         url=None,
-                        situate_context=True)
+                        situate_context=False,
+                        late_chunking=False)  # Enable late chunking
                     # Process the golden document content
                     processed_chunks = process_doc(config)
+                    # Apply late chunking
+                    late_chunked_docs = apply_late_chunking(processed_chunks)
                     # Add processed chunks to the vector store
-                    add_docs_to_store(cls.retriever, processed_chunks)
+                    add_docs_to_faiss_store(cls.retriever, late_chunked_docs)
                 finally:
                     # Ensure the temporary file is removed
                     os.unlink(temp_file_path)
+
     @classmethod
     def tearDownClass(cls):
         # Clean up the data directory
@@ -82,8 +87,7 @@ class TestRAGEvaluation(unittest.TestCase):
             shutil.rmtree(data_dir)
         print(f"Cleaned up {data_dir} directory")
 
-
-    def test_answer_relevance(self):
+    def test_late_chunking_relevance(self):
         relevance_scores = []
         results = []
         
@@ -105,8 +109,8 @@ class TestRAGEvaluation(unittest.TestCase):
         for entry in self.evaluation_data:
             query = entry['query']
             expected_answer = entry['answer']
-        
-            result_docs, _ = get_result_docs(chat_config, query)
+
+            result_docs, _ = get_result_docs(chat_config, query, retriever=self.retriever)
             context = ''.join(result_docs)
             final_answer = create_RAG_output(context, query, chat_config.llm)
         
@@ -129,11 +133,11 @@ class TestRAGEvaluation(unittest.TestCase):
             "average_score": average_score
         }
         
-        with open('/Users/jan/Desktop/advanced_rag/app/test/relevance_results.json', 'w') as f:
+        with open('/Users/jan/Desktop/advanced_rag/app/test/late_chunking_relevance_results.json', 'w') as f:
             json.dump(output, f, indent=2)
 
         print(f"Average relevance score: {average_score:.2f}")
-        print("Detailed results have been saved to 'relevance_results.json'")
+        print("Detailed results have been saved to 'late_chunking_relevance_results.json'")
         # Assert the average score
         self.assertGreaterEqual(average_score, 40,
                                 f"Low average relevance score ({average_score:.2f})")
@@ -141,4 +145,5 @@ class TestRAGEvaluation(unittest.TestCase):
 if __name__ == '__main__':
     unittest.main()
 
-# python -m unittest app/test/test_rag_evaluation.py
+# python -m unittest app/test/test_late_chunking_evaluation.py
+

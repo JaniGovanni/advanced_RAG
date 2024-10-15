@@ -6,18 +6,21 @@ from langchain_community.vectorstores import FAISS
 from uuid import uuid4
 from app.vectorstore import save_uuids
 from app.vectorstore.embeddings import JinaEmbeddings
+from dotenv import load_dotenv
+
+load_dotenv()
 
 def get_faiss_store_as_retriever():
     """
     To easily create or load a FAISS vectorstore.
     :return: FAISS vectorstore setup with appropriate embeddings as a retriever
     """
-    faiss_index_path = os.getenv("FAISS_INDEX_PATH", "faiss_index")
+    faiss_index_path = os.getenv("FAISS_STORE_PATH", "FAISS_STORE/faiss_index")
     
     # Try to load existing index if it exists
     if os.path.exists(faiss_index_path):
         print(f"Loading existing FAISS index from {faiss_index_path}")
-        vectorstore = FAISS.load_local(faiss_index_path, embeddings, allow_dangerous_deserialization=True)
+        vectorstore = FAISS.load_local(faiss_index_path, JinaEmbeddings(), allow_dangerous_deserialization=True)
     else:
         print(f"Creating new FAISS index")
         embeddings = JinaEmbeddings()
@@ -28,6 +31,8 @@ def get_faiss_store_as_retriever():
             docstore=InMemoryDocstore(),
             index_to_docstore_id={},
         )
+        vectorstore.save_local(faiss_index_path)
+        print(f"New FAISS index saved to {faiss_index_path}")
 
     return vectorstore.as_retriever()
 
@@ -43,10 +48,13 @@ def add_docs_to_faiss_store(retriever, docs):
     text_embeddings = [(doc.page_content, doc.metadata['embedding']) for doc in docs]
     metadatas = [doc.metadata for doc in docs]
     ids = [str(uuid4()) for _ in range(len(docs))]
-    save_uuids(docs[0].metadata['source'], ids, retriever.vectorstore)
+    save_uuids(docs[0].metadata['source'],
+               ids,
+               retriever.vectorstore,
+               file_path=os.getenv("FAISS_STORE_PATH") + "/source_to_id.json")
     vectorstore.add_embeddings(text_embeddings, metadatas, ids)
     
     # Save the updated index
-    faiss_index_path = os.getenv("FAISS_INDEX_PATH", "faiss_index")
+    faiss_index_path = os.getenv("FAISS_STORE_PATH", "FAISS_STORE/faiss_index")
     vectorstore.save_local(faiss_index_path)
     print(f"FAISS index saved to {faiss_index_path}")

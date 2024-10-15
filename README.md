@@ -1,18 +1,19 @@
 # advanced_rag
 
 Hello there and welcome to my second project hosted on github. 
-it implements an advanced Retrieval-Augmented Generation (RAG) system for question answering. My goal for this project was, to implement as much as possible from the things i have learned so far, about RAG and ML in general, as possible in this project. I also build this with the intention of modularity, because i will add more things as i go along in my learning.
+it implements an advanced Retrieval-Augmented Generation (RAG) system for question answering. My goal for this project was, to implement as much as possible from the things i have learned so far, about RAG and ML in general, in this project. I also build this with the intention of modularity, because i will add more things as i go along in my learning.
 
 ## Key features
 
 The features of this project are:
 
-1. Process and store all kind of document types and also providing options to filter out unwanted document sections for efficient retrieval.
+1. Process, structure and store all kind of document types and also providing options to filter out unwanted document sections for efficient retrieval.
 2. Combine more than one documents to build a knowledge base.
-3. Implement various RAG techniques (multi query, HyDE, BM25, Contextual Retrieval,...) to enhance query understanding and document retrieval.
-4. Ability to run the software completely locally using Ollma and ChromaDB or via API support from Groq.
+3. Implement various RAG techniques (multi query, HyDE, BM25 hybrid search, Contextual Retrieval,...) to enhance query understanding and document retrieval.
+4. Ability to run the software completely locally using Ollma (llama3.2:3b, llama3.2:1b, nomic-embed-text) and ChromaDB or via API support from Groq.
 5. Provide a flexible and configurable chat interface for interacting with the system.
 6. Include evaluation and testing capabilities to assess the system's performance.
+7. Easy deployment via Streamlit UI and containerisation with docker-compose
 
 ## Key Components
 
@@ -61,7 +62,7 @@ advanced_rag/
 4. **RAG_techniques**: Implements various RAG techniques to improve query processing and document retrieval.
    - Multi-query expansion
    - Hypothetical Document Embedding (HyDE)
-   - Additional BM25 retrieval
+   - BM25 hybrid search
    - Cross-encoder reranking
 
 5. **chains**: Defines conversation chains and query reformulation logic.

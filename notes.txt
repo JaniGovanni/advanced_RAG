@@ -6,3 +6,18 @@ run a linux virtual machine to run the ollama server. On linux this is not neces
 Also on mac, there seems to be no way for a container to access the GPU
 
 jina api jina_31bf3288e9494ac69db2cd6a25eaba10vfnAa-YJt4PmS6qUOJfQ7ih-pH64
+
+* Process, structure and store all kind of document types and also providing options to filter out unwanted document sections for efficient retrieval.
+* Combine more than one documents to build a knowledge base.
+* Implement various RAG techniques (multi query, HyDE, BM25, Contextual Retrieval,...) to enhance query understanding and document retrieval.
+* Ability to run the software completely locally using Ollma (llama3.2:3b, llama3.2:1b, nomic-embed-text) and ChromaDB or via API support from Groq.
+* Provide a flexible and configurable chat interface for interacting with the system.
+* Include evaluation and testing capabilities to assess the RAG-system's performance.
+* Easy deployment via Streamlit UI and containerisation with docker-compose
+
+
+bugs:
+
+- when adding something to the unwanted section list and hit doc processing before pressing enter,
+  the unwanted title is added 2 times to the list (second_page.py)
+

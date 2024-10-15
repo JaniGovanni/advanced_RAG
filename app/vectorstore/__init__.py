@@ -67,17 +67,20 @@ def add_docs_to_store(retriever, docs):
     retriever.vectorstore.add_documents(filtered_docs, ids=uuids)
 
 
-def save_uuids(source, new_uuids, vectorstore):
+def save_uuids(source, new_uuids, vectorstore, file_path=None):
     """
     saves a source to doc_id mapping to a seperate file. Overwrite any data,
     with the same source name.
     """
-    file_path = os.getenv("SOURCE_TO_ID_PATH")
+    if file_path is None:
+        file_path = os.getenv("SOURCE_TO_ID_PATH")
+    # Try to load existing data, or create an empty dict if file doesn't exist
     try:
         with open(file_path, 'r') as f:
             existing_data = json.load(f)
     except FileNotFoundError:
         existing_data = {}
+    
     # check if source already exist
     if source in existing_data:
         existing_uuids = existing_data[source]
@@ -88,6 +91,7 @@ def save_uuids(source, new_uuids, vectorstore):
         existing_data.update({source: new_uuids})
     with open(file_path, 'w') as f:
         json.dump(existing_data, f, indent=4)
+
 
 
 def delete_file_from_store(retriever, source:str):
@@ -125,12 +129,14 @@ def get_stored_files_and_tags(retriever):
         file_to_tag[filename] = tag
     return file_to_tag
 
-def get_stored_tags_and_files(retriever):
+def get_stored_tags_and_files(retriever, filename=None):
     """
     gets all tags and their files in a vectorstore.
     """
+    if filename is None:
+        filename = os.getenv("SOURCE_TO_ID_PATH")
     try:
-        with open(os.getenv("SOURCE_TO_ID_PATH"), 'r') as f:
+        with open(filename, 'r') as f:
             existing_data = json.load(f)
     except FileNotFoundError:
         return {}

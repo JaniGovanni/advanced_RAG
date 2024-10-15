@@ -76,8 +76,9 @@ class ChatConfig:
             return app.llm.get_groq_llm()
 
 
-def get_result_docs(ChatConfig, query):
-    retriever = get_chroma_store_as_retriever()
+def get_result_docs(ChatConfig, query, retriever=None):
+    if retriever is None:
+        retriever = get_chroma_store_as_retriever()
     # not necessary
     #ChatConfig.memory.chat_memory.add_user_message(query)
     search_filter = {'tag': ChatConfig.tag}
