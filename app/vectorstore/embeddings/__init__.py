@@ -5,6 +5,18 @@ import torch
 from langchain_community.embeddings import OllamaEmbeddings
 import os
 
+def mean_pooling(embeddings: torch.Tensor) -> torch.Tensor:
+    """
+    Perform mean pooling on the input embeddings along the sequence length dimension.
+
+    Args:
+        embeddings (torch.Tensor): Input embeddings tensor of shape [batch_size, seq_len, embed_dim]
+
+    Returns:
+        torch.Tensor: Mean-pooled embeddings of shape [batch_size, embed_dim]
+    """
+    return embeddings.mean(dim=-2)
+
 class JinaEmbeddings(Embeddings):
     def __init__(self, model_name: str = 'jinaai/jina-embeddings-v2-small-en'):
         self.tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True)
@@ -13,18 +25,15 @@ class JinaEmbeddings(Embeddings):
         self.model.to(self.device)
 
     def embed_documents(self, texts: List[str]) -> List[List[float]]:
-        embeddings = []
-        for text in texts:
-            inputs = self.tokenizer(text, return_tensors='pt', truncation=True, max_length=512).to(self.device)
-            # outputs processing is done in a different way in the late_chunking/__init__.py. But the output is the same
-            with torch.no_grad():
-                output = self.model(**inputs)
-            embedding = output.last_hidden_state.mean(dim=1).squeeze().cpu().numpy()
-            embeddings.append(embedding.tolist())
-        return embeddings
+        inputs = self.tokenizer(texts, return_tensors='pt', truncation=True, max_length=512, padding=True).to(self.device)
+        with torch.no_grad():
+            output = self.model(**inputs)
+        embeddings = mean_pooling(output.last_hidden_state).cpu().numpy()
+        return embeddings.tolist()
 
     def embed_query(self, text: str) -> List[float]:
         return self.embed_documents([text])[0]
+
 
 def get_ollama_embeddings():
     return OllamaEmbeddings(model="nomic-embed-text",

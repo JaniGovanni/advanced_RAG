@@ -1,6 +1,6 @@
 from transformers import AutoModel, AutoTokenizer
 import torch
-from app.vectorstore.embeddings import JinaEmbeddings
+from app.vectorstore.embeddings import JinaEmbeddings, mean_pooling
 
 
 def late_chunking(
@@ -27,7 +27,7 @@ def late_chunking(
                 if start < (max_length - 1)
             ]
         pooled_embeddings = [
-            embeddings[start:end].sum(dim=0) / (end - start)
+            mean_pooling(embeddings[start:end])
             for start, end in annotations
             if (end - start) >= 1
         ]
