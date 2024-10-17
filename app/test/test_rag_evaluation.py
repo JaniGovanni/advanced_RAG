@@ -10,7 +10,7 @@ from app.doc_processing import process_doc, ProcessDocConfig
 from app.vectorstore import get_chroma_store_as_retriever, add_docs_to_store
 from app.chat import ChatConfig, get_result_docs, create_RAG_output
 import app.llm
-from app.test.end_to_end_eval import evaluate_answer
+from app.test.end_to_end_eval import evaluate_answer_v1
 import tempfile
 import os
 import shutil
@@ -30,7 +30,7 @@ class TestRAGEvaluation(unittest.TestCase):
             k=10,
             llm=app.llm.get_groq_llm(),
             expand_by_answer=False,
-            expand_by_mult_queries=False,
+            expand_by_mult_queries=True,
             reranking=True,
             use_bm25=False
     )
@@ -110,7 +110,7 @@ class TestRAGEvaluation(unittest.TestCase):
             context = ''.join(result_docs)
             final_answer = create_RAG_output(context, query, chat_config.llm)
         
-            relevance_score = evaluate_answer(query, final_answer, expected_answer)
+            relevance_score = evaluate_answer_v1(query, final_answer, expected_answer)
             relevance_scores.append(relevance_score)
             
             results.append({

@@ -83,9 +83,9 @@ langchain-ollama==0.2.0
 
 
 langchain-text-splitters==0.3.0
-langchain==0.3.0
+langchain==0.3.3
 langdetect==1.0.9
-langsmith==0.1.117
+#langsmith==0.1.117
 layoutparser==0.3.4
 lxml==5.3.0
 markdown-it-py==3.0.0
@@ -210,6 +210,6 @@ rank_bm25==0.2.1
 tqdm==4.66.5
 
 faiss-cpu==1.7.4
-jinaai==0.4.1
+jinaai==0.2.10
 transformers==4.44.2
 torch==2.4.0

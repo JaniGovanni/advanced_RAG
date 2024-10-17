@@ -11,7 +11,7 @@ the user overcome some of the limitations of the distance-based similarity searc
 Provide these alternative questions separated by newlines. Original question: {question}"""
 
 # for HyDE
-prompt = example_prompt = prompt = """
+prompt = """
     Assume you have access to a hypothetical document. 
     This could be a website, a scientific paper, a report, a Wikipedia article, or anything else. 
     Your task is to provide an text snippet from such a hypothetical document 
@@ -148,22 +148,20 @@ def project_embeddings(embeddings, umap_transform):
     projected_embeddings = umap_transform.transform(embeddings)
     return projected_embeddings
 
+# the loading of the model has to be cached, when running this via streamlit
+# otherwise the download happens every time
 def rerank_by_crossencoder(retrieved_docs, original_query, top_k=3):
-    """
-    Uses an crossencoder (from sentence-transformers), to determine if the query
-    is connected to the retrieved documents. After this, the documents, which are
-    most connected to the original query gets returned
-    :param retrieved_docs: by an similarity search founded docs
-    :param original_query: The original user query
-    :param top_k: How many docs should be returned
-    :return: top_k to the query most connected documents
-    """
+    try:
+        cross_encoder = CrossEncoder("cross-encoder/ms-marco-MiniLM-L-6-v2")
+        pairs = [[original_query, doc] for doc in retrieved_docs]
+        scores = cross_encoder.predict(pairs)
 
-    cross_encoder = CrossEncoder("cross-encoder/ms-marco-MiniLM-L-6-v2")
-    pairs = [[original_query, doc] for doc in retrieved_docs]
-    scores = cross_encoder.predict(pairs)
-
-    top_indices = np.argsort(scores)[::-1][:top_k]
-    top_documents = [retrieved_docs[i] for i in top_indices]
-    return top_documents
-
+        top_indices = np.argsort(scores)[::-1][:top_k]
+        top_documents = [retrieved_docs[i] for i in top_indices]
+        return top_documents
+    except ConnectionError:
+        print("Unable to connect to the model server. Skipping reranking.")
+        return retrieved_docs[:top_k]  # Return top k documents without reranking
+    except Exception as e:
+        print(f"An error occurred during reranking: {str(e)}")
+        return retrieved_docs[:top_k]  # Return top k documents without reranking

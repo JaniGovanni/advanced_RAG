@@ -16,19 +16,20 @@ import tempfile
 import os
 import shutil
 
+tag = "test_late_chunking_custom_faiss"
 
 class TestLateChunkingEvaluation(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         # Set up the document processing and store creation
-        cls.retriever = get_faiss_store_as_retriever()
+        cls.retriever = get_faiss_store_as_retriever(custom=True)
         cls.evaluation_data = cls.load_jsonl('app/test/evaluation_set.jsonl', num_lines=20)
         cls.add_golden_docs_to_store()
 
     @classmethod
     def create_test_chat_config(cls):
         config = ChatConfig(
-            tag="test_late_chunking",
+            tag=tag,
             k=10,
             llm=app.llm.get_groq_llm(),
             expand_by_answer=False,
@@ -63,7 +64,7 @@ class TestLateChunkingEvaluation(unittest.TestCase):
 
                 try:
                     config = ProcessDocConfig(
-                        tag="test_late_chunking",
+                        tag=tag,
                         local=True,
                         filepath=temp_file_path,
                         url=None,
@@ -82,7 +83,7 @@ class TestLateChunkingEvaluation(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         # Clean up the data directory
-        data_dir = os.getenv("CHROMA_PATH")
+        data_dir = os.getenv("FAISS_STORE_PATH")
         if os.path.exists(data_dir):
             shutil.rmtree(data_dir)
         print(f"Cleaned up {data_dir} directory")

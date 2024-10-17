@@ -14,8 +14,8 @@ def get_ollama_llm():
 
 def get_groq_llm():
     llm = ChatGroq(
-        #model="llama-3.1-70b-versatile",
-        model="llama-3.2-90b-text-preview",
+        model="llama-3.1-70b-versatile",
+        #model="llama-3.2-90b-text-preview",
         temperature=0,
         api_key=os.environ.get('GROQ_API_KEY')
     )
