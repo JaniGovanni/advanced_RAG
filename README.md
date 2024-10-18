@@ -24,9 +24,12 @@ advanced_rag/
 │   │   ├── __init__.py
 │   │   ├── API.py
 │   │   ├── filters.py
-│   │   └── metadata/
+│   │   ├── metadata/
+│   │   └── late_chunking/
 │   ├── vectorstore/
-│   │   └── __init__.py
+│   │   ├── __init__.py
+│   │   ├── embeddings/
+│   │   └── experimental/
 │   ├── contextual_embedding/
 │   │   └── __init__.py
 │   ├── RAG_techniques/
@@ -35,11 +38,14 @@ advanced_rag/
 │   │   └── __init__.py
 │   ├── llm/
 │   │   └── __init__.py
+│   ├── memory/
+│   │   └── __init__.py
 │   ├── chat.py
 │   └── test/
 │       ├── test_rag_evaluation.py
-│       └── test_rag_pipeline.py
-└── README.md
+│       ├── test_rag_pipeline.py
+│       └── test_late_chunking_evaluation.py
+|
 ```
 
 ### Key Modules and Their Functions
