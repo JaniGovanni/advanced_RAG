@@ -144,7 +144,6 @@ def get_stored_tags_and_files(retriever, filename=None):
     for filename in filenames:
         # there must be a better way to do this
         ex_doc = retriever.vectorstore.similarity_search('', filter={'source':filename})[0]
-        tag = ex_doc.metadata['tag']
         if ex_doc.metadata['tag'] not in tag_to_file:
             tag_to_file[ex_doc.metadata['tag']] = [filename]
         else:
