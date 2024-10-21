@@ -22,3 +22,4 @@ app/test/relevance_results.json
 notes.txt
 linkedin/
 app/doc_processing/late_chunking/develo.ipynb
+cookbooks/test.py

@@ -11,7 +11,7 @@ st.session_state['chat_config'].llm = st.session_state['chat_config'].get_llm()
 
 # define rag options
 
-st.session_state['chat_config'].history_awareness(st.checkbox("Use history awareness", value=1))
+st.session_state['chat_config'].set_history_awareness(st.checkbox("Use history awareness", value=1))
 st.session_state['chat_config'].set_exp_by_answer(st.checkbox("Use HyDe to expand the similarity search by an fictional answer",
                                                               value=0))
 st.session_state['chat_config'].set_mult_queries(st.checkbox("formulate multiple search querys for the similarity search",
@@ -25,7 +25,7 @@ if user_query is not None and user_query != "":
 
     # create a function to do this
     context, joint_query = get_result_docs(query=user_query,
-                                           ChatConfig=st.session_state['chat_config'])
+                                           chat_config=st.session_state['chat_config'])
 
     context = ''.join(context)
     ai_answer = create_RAG_output(context=context,
