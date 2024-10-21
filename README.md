@@ -3,6 +3,11 @@
 Hello there and welcome to my second project hosted on github. 
 it implements an advanced Retrieval-Augmented Generation (RAG) system for question answering. My goal for this project was, to implement as much as possible from the things i have learned so far, about RAG and ML in general, in this project. I also build this with the intention of modularity, because i will add more things as i go along in my learning. **I try to keep this README as actual as possible, as i implement new things.**
 
+## Agnda
+
+* implement RestAPI
+* implement image support
+
 ## Key features
 
 The features of this project are:
