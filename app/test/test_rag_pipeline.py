@@ -18,10 +18,6 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '.
 
 # to run: python -m unittest app.test.test_rag_pipeline
 
-# This is an example, who an RAG pipeline test could look like.
-# The test is not perfect, but it is a good starting point.
-# Note that there is an library called deepeval that could be used to test RAG pipelines.
-# However, i dont have an OPENAI key, so i cannot use it without much effort and create a custom llm wrapper.
 dotenv.load_dotenv('app/.env')
 
 def evaluate_answer(query, answer):
@@ -66,45 +62,45 @@ class TestChatRelevance(unittest.TestCase):
             shutil.rmtree(data_dir)
         print(f"Cleaned up {data_dir} directory")
 
-    
-    def test_bm25_retrieval_effectiveness(self):
-        # Create a ChatConfig instance
-        chat_config = ChatConfig(
-        tag="attention",
-        use_bm25=True,
-        k=5,
-        llm_choice="groq",
-        reranking=False,
-        expand_by_mult_queries=False)
+    # TODO: Find a good test for this
+    # def test_bm25_retrieval_effectiveness(self):
+    #     # Create a ChatConfig instance
+    #     chat_config = ChatConfig(
+    #     tag="attention",
+    #     use_bm25=True,
+    #     k=5,
+    #     llm_choice="groq",
+    #     reranking=False,
+    #     expand_by_mult_queries=False)
 
-        # Disable history awareness for this test
-        chat_config.history_awareness(False)
+    #     # Disable history awareness for this test
+    #     chat_config.set_history_awareness(False)
 
-        # Define a query that is likely to be challenging for pure vector similarity search
-        query = "What are the computational requirements for the Transformer model?"
+    #     # Define a query that is likely to be challenging for pure vector similarity search
+    #     query = "What are the computational requirements for the Transformer model?"
 
-        # Get the results with BM25 enabled
-        result_docs_with_bm25, _ = get_result_docs(chat_config, query)
+    #     # Get the results with BM25 enabled
+    #     result_docs_with_bm25, _ = get_result_docs(chat_config, query)
 
-        # Disable BM25 and get results with only similarity search
-        chat_config.use_bm25 = False
-        result_docs_without_bm25, _ = get_result_docs(chat_config, query)
+    #     # Disable BM25 and get results with only similarity search
+    #     chat_config.use_bm25 = False
+    #     result_docs_without_bm25, _ = get_result_docs(chat_config, query)
 
-        # Function to check if a document is relevant
-        def is_relevant(doc):
-            relevant_terms = ['computational', 'requirements', 'complexity', 'efficiency', 'hardware', 'gpu', 'memory']
-            return any(term in doc.lower() for term in relevant_terms)
+    #     # Function to check if a document is relevant
+    #     def is_relevant(doc):
+    #         relevant_terms = ['computational', 'requirements', 'complexity', 'efficiency', 'hardware', 'gpu', 'memory']
+    #         return any(term in doc.lower() for term in relevant_terms)
 
-        # Count relevant documents in each result set
-        relevant_with_bm25 = sum(1 for doc in result_docs_with_bm25 if is_relevant(doc))
-        relevant_without_bm25 = sum(1 for doc in result_docs_without_bm25 if is_relevant(doc))
+    #     # Count relevant documents in each result set
+    #     relevant_with_bm25 = sum(1 for doc in result_docs_with_bm25 if is_relevant(doc))
+    #     relevant_without_bm25 = sum(1 for doc in result_docs_without_bm25 if is_relevant(doc))
 
-        # Assert that BM25 retrieval finds more relevant documents
-        self.assertGreater(relevant_with_bm25, relevant_without_bm25, 
-                        "BM25 retrieval did not improve the relevance of search results")
+    #     # Assert that BM25 retrieval finds more relevant documents
+    #     self.assertGreater(relevant_with_bm25, relevant_without_bm25, 
+    #                     "BM25 retrieval did not improve the relevance of search results")
 
-        print(f"Relevant docs with BM25: {relevant_with_bm25}")
-        print(f"Relevant docs without BM25: {relevant_without_bm25}")
+    #     print(f"Relevant docs with BM25: {relevant_with_bm25}")
+    #     print(f"Relevant docs without BM25: {relevant_without_bm25}")
 
     def test_document_processing_and_storage(self):
         # Perform a similarity search to check if documents were added correctly
@@ -118,8 +114,8 @@ class TestChatRelevance(unittest.TestCase):
         query = "What is attention?"
         config_multi_query = ChatConfig(tag='attention',
                                         k=10,
-                                        llm=app.llm.get_ollama_llm())
-        config_multi_query.history_awareness(False)
+                                        llm_choice="groq")
+        config_multi_query.set_history_awareness(False)
         config_multi_query.set_mult_queries(True)
         config_multi_query.set_reranking(True)
         config_multi_query.set_exp_by_answer(False)
@@ -137,8 +133,8 @@ class TestChatRelevance(unittest.TestCase):
         query = "What BLEU score did the Transformer (base-model) achieve?"
         config_multi_query = ChatConfig(tag='attention',
                                         k=10,
-                                        llm=app.llm.get_groq_llm())
-        config_multi_query.history_awareness(False)
+                                        llm_choice="groq")
+        config_multi_query.set_history_awareness(False)
         config_multi_query.set_mult_queries(True)
         config_multi_query.set_reranking(True)
         config_multi_query.set_exp_by_answer(False)

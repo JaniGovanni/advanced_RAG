@@ -28,13 +28,13 @@ class TestRAGEvaluation(unittest.TestCase):
         config = ChatConfig(
             tag="test",
             k=10,
-            llm=app.llm.get_groq_llm(),
+            llm_choice="groq",
             expand_by_answer=True,
             expand_by_mult_queries=False,
             reranking=True,
-            use_bm25=False
+            use_bm25=True
     )
-        config.history_awareness(False)
+        config.set_history_awareness(False)
         return config
 
 
