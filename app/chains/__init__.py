@@ -1,108 +1,51 @@
 from langchain.chains import ConversationChain
 from langchain_ollama import ChatOllama
 from app.memory import build_window_buffer_memory, build_conversation_buffer_memory
-
-
-# rewrite this with runnables
-# https://python.langchain.com/v0.2/docs/tutorials/chatbot/
-# def history_aware_query_chain(memory, verbose=False):
-#     """
-#     creates a chain, which reformulates a users query, based on the previous
-#     conversation stored in memory, as a standalone question
-#     :param memory: memory object
-#     :return: history_aware_query_chain
-#     """
-#     # currently only phi3.5
-#     llm = ChatOllama(
-#         model="phi3.5",
-#         temperature=0,
-#     )
-#
-#     conversation = ConversationChain(
-#         llm=llm,
-#         verbose=verbose,
-#         memory=memory
-#     )
-#
-#     conversation.prompt.template = """Given a chat history and the latest user question
-#     which might reference context in the chat history,
-#     formulate a standalone question which can be understood
-#     without the chat history. Be as short as possible.
-#     Do NOT answer the question, just
-#     reformulate it if needed and otherwise return it as is.
-#
-#     Current conversation:
-#     {history}
-#     Human: {input}
-#     AI:"""
-#     return conversation
-
-# work in progress
-# class Reformulate_Query_Object:
-#     def __init__(self, ChatConfig):
-#         """
-#         Object is used to reformulate a users query (with different advanced RAG techniques) to
-#         be find better results during a similarity search.
-#         :param ChatConfig: Configuration of the object
-#         """
-#         self.tag = ChatConfig.tag
-#         self.expand_by_answer = ChatConfig.expand_by_answer
-#         self.expand_by_mult_queries = ChatConfig.expand_by_mult_queries
-#         self.reranking = ChatConfig.reranking
-#         self.history_aware = ChatConfig.history_aware
-#         self.k = ChatConfig.k
-#         self.tag = ChatConfig.tag
-#
-#         self.llm = ChatOllama(
-#             model="phi3.5",
-#             temperature=0,
-#         )
-#         self.memory = build_window_buffer_memory(self.tag)
-#         self.history_aware_chain = HistoryAwareQueryChain(self.llm, self.memory)
-#
+from langchain.prompts import PromptTemplate
+from langchain.schema import BaseMemory
 
 class HistoryAwareQueryChain:
-    def __init__(self, memory, llm, verbose=False):
+    def __init__(self, memory: BaseMemory, llm, verbose: bool = False):
         """
-        Creates a chain that reformulates a user's query, based on the previous
-        conversation stored in memory, as a standalone question.
+        Creates a chain that reformulates a user's query based on conversation history.
 
-        :param memory: memory object
-        :param verbose: whether to print verbose output
+        :param memory: Memory object to store conversation history
+        :param llm: Language model to use for reformulation
+        :param verbose: Whether to print verbose output
         """
         self.memory = memory
         self.llm = llm
-        # rewrite with runnables
-        # https://python.langchain.com/v0.2/docs/tutorials/chatbot/
-        self.conversation = ConversationChain(
-            llm=self.llm,
-            verbose=verbose,
-            memory=self.memory
-        )
 
-        self.conversation.prompt.template = """Given a chat history and the latest user question 
-        which might reference context in the chat history, 
-        formulate a standalone question which can be understood 
-        without the chat history. Be as short as possible.
-        Do NOT answer the question, just 
-        reformulate it if needed and otherwise return it as is.
+        prompt_template = """
+        Given a chat history and the latest user question, formulate a standalone question
+        that can be understood without the chat history. Be concise.
+        Do NOT answer the question, just reformulate if needed or return as is.
 
         Current conversation:
         {history}
         Human: {input}
-        AI:"""
-
-    def reformulate(self, input):
+        AI:
         """
-        Reformulates the given input query using the conversation chain and
-        dont adds the output to the memory
 
-        :param input: the input query
-        :return: the reformulated query
+        self.conversation = ConversationChain(
+            llm=self.llm,
+            verbose=verbose,
+            memory=self.memory,
+            prompt=PromptTemplate.from_template(prompt_template)
+        )
+
+    def reformulate(self, input_query: str) -> str:
         """
-        response = self.conversation.invoke(input=input, return_only_output=True)
-        # to clear the generated answer from the memory, probably there
-        # is a better way to do this....
-        del self.memory.chat_memory.messages[-1]
-        #self.memory.chat_memory.messages.pop()
+        Reformulates the given input query using the conversation chain.
+
+        :param input_query: The input query to reformulate
+        :return: The reformulated query
+        """
+        response = self.conversation.invoke(input=input_query, return_only_output=True)
+        self._clear_last_memory_entry()
         return response['response']
+
+    def _clear_last_memory_entry(self):
+        """Removes the last entry from the memory to avoid storing the reformulated query."""
+        if hasattr(self.memory, 'chat_memory') and self.memory.chat_memory.messages:
+            self.memory.chat_memory.messages.pop()

@@ -1,88 +1,95 @@
 
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
-import json
 from warnings import warn
-import app.llm
-import sys
 import os
 import json
 import time
-from tqdm import tqdm
 import streamlit as st
 from langchain_ollama import ChatOllama
+from app.contextual_embedding.constants import DOCUMENT_CONTEXT_PROMPT, CHUNK_CONTEXT_PROMPT
+from typing import List, Optional, Callable
+from unstructured.documents.elements import Element
 
 
-DOCUMENT_CONTEXT_PROMPT = """
-<document>
-{doc_content}
-</document>
-"""
+class ContextualEmbedder:
+    def __init__(self, model: str = "llama3.2:1b", base_url: Optional[str] = None):
+        self.llm = ChatOllama(
+            model=model,
+            temperature=0,
+            base_url=base_url or os.getenv('OLLAMA_BASE_URL')
+        )
+        self.prompt = ChatPromptTemplate.from_messages([
+            ("system", DOCUMENT_CONTEXT_PROMPT),
+            ("human", CHUNK_CONTEXT_PROMPT),
+        ])
+        self.chain = (
+            {"doc_content": lambda x: x["doc_content"], "chunk_content": lambda x: x["chunk_content"]}
+            | self.prompt
+            | self.llm
+            | StrOutputParser()
+        )
 
-CHUNK_CONTEXT_PROMPT = """
-Here is the chunk we want to situate within the whole document
-<chunk>
-{chunk_content}
-</chunk>
+    def situate_context(self, doc: str, chunks: List[Element], progress_callback: Optional[Callable] = None) -> List[str]:
+        prompt = ChatPromptTemplate.from_messages([
+            ("system", DOCUMENT_CONTEXT_PROMPT),
+            ("human", CHUNK_CONTEXT_PROMPT),
+            ])
 
-Please give a short succinct context to situate this chunk within the overall document for the purposes of improving search retrieval of the chunk.
-Answer only with the succinct context and nothing else.
-"""
-
-def situate_context(doc, chunks, llm, progress_callback=None):
-    prompt = ChatPromptTemplate.from_messages([
-        ("system", DOCUMENT_CONTEXT_PROMPT),
-        ("human", CHUNK_CONTEXT_PROMPT),
-    ])
-
-    chain = (
-        {"doc_content": lambda x: x["doc_content"], "chunk_content": lambda x: x["chunk_content"]}
-        | prompt
-        | llm
-        | StrOutputParser()
+        chain = (
+            {"doc_content": lambda x: x["doc_content"], "chunk_content": lambda x: x["chunk_content"]}
+            | prompt
+            | self.llm
+            | StrOutputParser()
     )
 
-    # Prepare inputs for batch processing
-    inputs = [{"doc_content": doc, "chunk_content": chunk.text} for chunk in chunks]
+        # Prepare inputs for batch processing
+        inputs = [{"doc_content": doc, "chunk_content": chunk.text} for chunk in chunks]
 
-    total_chunks = len(inputs)
-    combined_results = []
-    batch_size = 3
+        total_chunks = len(inputs)
+        combined_results = []
+        batch_size = 3
 
-    start_time = time.time()
+        start_time = time.time()
     
-    for i in range(0, total_chunks, batch_size):
-        batch = inputs[i:i+batch_size]
-        
-        batch_start_time = time.time()
-        # Process inputs in batches
-        batch_results = chain.batch(batch)
-        batch_end_time = time.time()
+        for i in range(0, total_chunks, batch_size):
+            batch = inputs[i:i+batch_size]
+            
+            batch_start_time = time.time()
+            # Process inputs in batches
+            batch_results = chain.batch(batch)
+            batch_end_time = time.time()
 
-        # Combine original chunks with generated contexts for this batch
-        batch_combined = [f"{chunk}\n\n{context}" for chunk, context in zip(chunks[i:i+batch_size], batch_results)]
-        combined_results.extend(batch_combined)
+            # Combine original chunks with generated contexts for this batch
+            batch_combined = [f"{chunk}\n\n{context}" for chunk, context in zip(chunks[i:i+batch_size], batch_results)]
+            combined_results.extend(batch_combined)
 
-        if progress_callback:
-            progress = int((i + len(batch)) / total_chunks * 100)
-            elapsed_time = time.time() - start_time
-            batch_time = batch_end_time - batch_start_time
-            progress_callback(progress, elapsed_time, batch_time)
+            if progress_callback:
+                progress = int((i + len(batch)) / total_chunks * 100)
+                elapsed_time = time.time() - start_time
+                batch_time = batch_end_time - batch_start_time
+                progress_callback(progress, elapsed_time, batch_time)
 
-    return combined_results
+        return combined_results
+
+    def create_contextual_embeddings(self, chunks: List[Element], progress_callback: Optional[Callable] = None) -> List[str]:
+        combined_text = " ".join([chunk.text for chunk in chunks])
+        estimated_tokens = len(combined_text) // 4
+        context_window_size = 100000
+
+        if estimated_tokens > context_window_size:
+            warn(f"Estimated tokens ({estimated_tokens}) exceed context window size. Consider not using contextual embeddings.")
+
+        return self.situate_context(combined_text, chunks, progress_callback)
 
 
 
-def create_contextual_embeddings(chunks, progress_callback=None):
+
+def create_contextual_embeddings(self, chunks: List[str], progress_callback: Optional[Callable] = None) -> List[str]:
     """
     adds context information to the chunks
     """
-    # without context caching, this is simply not viable to do via API
-    llm = ChatOllama(
-                    model="llama3.2:1b",
-                    temperature=0,
-                    base_url=os.getenv('OLLAMA_BASE_URL'))
-
+    
     combined_text = " ".join([chunk.text for chunk in chunks])
 
     # Estimate the number of tokens (roughly equal to number of chars //4)
@@ -95,9 +102,7 @@ def create_contextual_embeddings(chunks, progress_callback=None):
     if estimated_tokens > context_window_size:
         warn(f"Estimated tokens ({estimated_tokens}) exceed context window size. Consider not using contextual embeddings.")
 
-    contextualized_chunks = situate_context(combined_text, chunks, llm, progress_callback)
-
-    return contextualized_chunks
+    return self.situate_context(combined_text, chunks, progress_callback)
 
 def create_contextual_embeddings_with_progress(pdf_chunks):
     st.write("Creating contextual embeddings...")
@@ -108,26 +113,11 @@ def create_contextual_embeddings_with_progress(pdf_chunks):
         progress_bar.progress(progress / 100)
         status_text.text(f"Progress: {progress}% | Elapsed Time: {elapsed_time:.2f}s | Last Batch Time: {batch_time:.2f}s")
     
-    created_contents = create_contextual_embeddings(pdf_chunks, update_embedding_progress)
+    embedder = ContextualEmbedder()  # Create an instance of ContextualEmbedder
+    created_contents = embedder.create_contextual_embeddings(pdf_chunks, update_embedding_progress)
     
     progress_bar.empty()
     status_text.empty()
     st.write("Contextual embeddings created successfully!")
     
     return created_contents
-    
-
-
-
-# jsonl_data = load_jsonl('/Users/jan/Desktop/advanced_rag/app/contextual_embedding/evaluation_set.jsonl')
-# # Example usage
-# doc_contents = [data['golden_documents'][0]['content'] for data in jsonl_data[:5]]  # Process first 5 documents
-# chunk_contents = [data['golden_chunks'][0]['content'] for data in jsonl_data[:5]]  # Process first 5 chunks
-
-# print("========SITUATED_CONTEXTS========")
-# responses = situate_context(doc_contents, chunk_contents)
-# for i, response in enumerate(responses, 1):
-#     print(f"--- Result {i} ---")
-#     print(response)
-#     print()
-
