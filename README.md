@@ -5,7 +5,7 @@ it implements an advanced Retrieval-Augmented Generation (RAG) system for questi
 
 ## Agnda
 
-* implement RestAPI
+* implement API calls in streamlit interface
 * implement image support
 
 ## Key features
