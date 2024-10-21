@@ -1,4 +1,6 @@
 import re
+from typing import List, Optional
+from unstructured.documents.elements import Element
 
 unwanted_categories_default = ['Header', 'Footer', 'Image', 'FigureCaption', 'Formula', 'Table']
 
@@ -16,41 +18,48 @@ unwanted_titles_list_default = [
 ]
 
 
-def filter_elements_by_title(elements, unwanted_titles_list):
+def filter_elements_by_title(elements: List[Element], unwanted_titles_list: List[str]) -> List[Element]:
     """
     Removes all elements that belong to a title containing the expressions of the filter strings.
-    :param elements: list of elements
-    :param unwanted_titles_list: list of expressions which occurs in unwanted titles
-    :return:  filtered list of elements
+
+    Args:
+        elements (List[Element]): List of document elements.
+        unwanted_titles_list (List[str]): List of expressions which occur in unwanted titles.
+
+    Returns:
+        List[Element]: Filtered list of elements.
     """
-    unwanted_ids = []
+    unwanted_ids = set()
     for expression_in_title in unwanted_titles_list:
-        #unwanted_titles = [element for element in elements if
-        #                   re.search(expression_in_title, element.text, re.IGNORECASE) and element.category == "Title"]
-        unwanted_titles = [element for element in elements if
-                           expression_in_title.lower() in element.text.lower()]
-        if len(unwanted_titles) > 0:
-            unwanted_id = unwanted_titles[0].id  # assuming there is only 1 of this specific unwanted title
-            unwanted_ids.append(unwanted_id)
-    filtered_elements = [el for el in elements if el.metadata.parent_id not in unwanted_ids and el.id not in unwanted_ids]
-    return filtered_elements
+        unwanted_titles = [
+            element for element in elements
+            if expression_in_title.lower() in element.text.lower()
+        ]
+        if unwanted_titles:
+            unwanted_ids.add(unwanted_titles[0].id)
+
+    return [
+        el for el in elements
+        if el.metadata.parent_id not in unwanted_ids and el.id not in unwanted_ids
+    ]
 
 
-def filter_elements_by_unwanted_categories(elements, unwanted_categories_list):
+def filter_elements_by_unwanted_categories(elements: List[Element], unwanted_categories_list: List[str]) -> List[Element]:
     """
-    Filter out elements, which are contained in unwanted categories (Header, Footer,..)
+    Filter out elements which are contained in unwanted categories.
 
-    elements: list of unstructured.documents.elements.Element
-    pdf: bool, whether the elements are from a pdf or not. Crucial for
-    formula processing
+    Args:
+        elements (List[Element]): List of document elements.
+        unwanted_categories_list (List[str]): List of unwanted categories.
+
+    Returns:
+        List[Element]: Filtered list of elements.
     """
-    # currently no multimodal RAG, filter out Image
-    # UncategorizedText doesnt get filtered right now
-    # for pdf documents, Formulas dont get extracted in markdown, in html
-    # they are. in docx, pptx, xlsx they are ignored
-    # in html, they are formatted in markdown and have no specific category
-    filtered_elements = [element for element in elements if element.category not in unwanted_categories_list]
-    return filtered_elements
+    return [
+        element for element in elements
+        if element.category not in unwanted_categories_list
+    ]
+
 
 def convert_regex_to_display(unwanted_titles_list_default):
     """

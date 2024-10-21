@@ -29,7 +29,7 @@ class TestRAGEvaluation(unittest.TestCase):
             tag="test",
             k=10,
             llm=app.llm.get_groq_llm(),
-            expand_by_answer=False,
+            expand_by_answer=True,
             expand_by_mult_queries=False,
             reranking=True,
             use_bm25=False
@@ -66,7 +66,7 @@ class TestRAGEvaluation(unittest.TestCase):
                         local=True,
                         filepath=temp_file_path,
                         url=None,
-                        situate_context=True)
+                        situate_context=False)
                     # Process the golden document content
                     processed_chunks = process_doc(config)
                     # Add processed chunks to the vector store

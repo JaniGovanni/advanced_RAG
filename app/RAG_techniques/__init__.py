@@ -1,137 +1,66 @@
-import re
 from sentence_transformers import CrossEncoder
 import numpy as np
+from .prompts import MULTI_QUERY_PROMPT, HYDE_PROMPT_V2
+from typing import List, Any, Dict
+from pydantic import BaseModel, Field
 
-#=====intersting Prompts======
-# for multi query
-template = """You are an AI language model assistant. Your task is to generate five 
-different versions of the given user question to retrieve relevant documents from a vector 
-database. By generating multiple perspectives on the user question, your goal is to help
-the user overcome some of the limitations of the distance-based similarity search. 
-Provide these alternative questions separated by newlines. Original question: {question}"""
+class MultiQueryOutput(BaseModel):
+    queries: List[str] = Field(..., min_items=5, max_items=5)
 
-# for HyDE
-prompt = """
-    Assume you have access to a hypothetical document. 
-    This could be a website, a scientific paper, a report, a Wikipedia article, or anything else. 
-    Your task is to provide an text snippet from such a hypothetical document 
-    that could contain the answer 
-    to a user's question. Please dont output anything else. Here is an example:
 
-    user_question_1: Is Discretization necessary?
-    
-    answer_1: However, the parameterization of Mamba still used the same discretization 
-    step as in prior structured SSMs, where there is another parameter Δ being modeled. 
-    We do this because the discretization step has other side effects such as properly normalizing the activations 
-    which is important for performance.
-    The initializations and parameterizations from the 
-    previous  SSMs still work out-of-the-box, so why fix what’s not broken?
-    Despite this, we’re pretty sure that the discretization step isn’t necessary for Mamba. 
-    In the Mamba-2 paper, we chose to work directly with the “discrete parameters” 𝐴 and 𝐵, 
-    which in all previous structured SSM papers (including Mamba-1) were denoted
-    
-    user_question_2: What is the Hooded Man?
-    
-    answer_2: The Hooded Man (or The Man on the Box)[1] is an image showing 
-    a prisoner at Abu Ghraib prison with wires attached to his fingers, 
-    standing on a box with a covered head. The photo has been portrayed as an iconic 
-    photograph of the Iraq War, "the defining image of the scandal" 
-    and "symbol of the torture at Abu Ghraib". The image was published on the 
-    cover of The Economist's 8 May 2004 issue, the opening photo of The New 
-    Yorker on 10 May 2004, and on 11 March 2006 in The New York Times's 
-    first section at the top left-hand corner.
+def generate_multi_query(query: str, llm: Any) -> List[str]:
     """
+    Generate multiple queries similar to the provided one using an LLM.
 
-def generate_multi_query(query, llm):
+    :param query: User's query
+    :param llm: Language model to perform query expansion technique
+    :return: List of generated queries
     """
-    Uses a llm, to generate multiple queries,
-    which should be similar to the provided one.
-    :param query: users query
-    :param llm: llm, to perform query expansion technique
-    :return: list of generated queries
-    """
-    # general formulated, works ok.
-    example_prompt = """
-    You are a knowledgeable research assistant. 
-    Your users are inquiring about a specific topic. 
-    For the given question, propose up to five related questions to assist them
-    in finding the information they need. 
-    Provide concise, single-topic questions (without compounding sentences)
-    that cover various aspects of the topic. 
-    Ensure each question is complete and directly related 
-    to the original inquiry. List each question on a separate line. Do Not number or index
-    them.
-    """
-
     messages = [
-        (
-            "system",
-            example_prompt
-        ),
-        (
-            "human",
-            query
-        ),
+        ("system", MULTI_QUERY_PROMPT),
+        ("human", f"Original query: {query}\n\nGenerate 5 alternative queries:"),
     ]
     response = llm.invoke(messages)
-    content = response.content
-    # The local llm keeps creating indices, llama 3 with 70b doesnt do that
-    if llm.get_name() == 'ChatOllama':
-        content = re.findall(r'\d+\.\s+(.*)', content, re.MULTILINE)
-    else:
-        content = content.split('\n')
-    return content
+    
+    try:
+        parsed_output = MultiQueryOutput.model_validate_json(response.content)
+        return parsed_output.queries
+    except Exception as e:
+        print(f"Error parsing LLM output: {e}")
+        # Fallback to simple splitting if parsing fails
+        return response.content.split('\n')[:5]
 
 
-def get_joint_query_results(retriever, joint_query, filter: dict, k=5):
+def get_joint_query_results(retriever: Any, joint_query: List[str], filter: Dict[str, Any], k: int = 5) -> List[Any]:
     """
-    Performs a similarity search in the vectorstore, for a list of queries.
-    Duplicate founded documents gets filtered. Is part of the query-expansion /
-    multi query technique
+    Perform a similarity search in the vectorstore for a list of queries.
+
+    :param retriever: Retriever object with a vectorstore
+    :param joint_query: List of queries
+    :param filter: Filter dictionary for the search
+    :param k: Number of results to retrieve per query
+    :return: List of unique documents
     """
     joint_query_results = []
     for query in joint_query:
-        results = retriever.vectorstore.similarity_search(query,
-                                                          k=k,
-                                                          filter=filter)
-        for doc in results:
-            if doc not in joint_query_results:
-                joint_query_results.append(doc)
-
+        results = retriever.vectorstore.similarity_search(query, k=k, filter=filter)
+        joint_query_results.extend([doc for doc in results if doc not in joint_query_results])
     return joint_query_results
 
-def augment_query_generated(query, llm):
+def augment_query_generated(query: str, llm: Any) -> str:
     """
-    Generates an hallucinated answer for the given query, which can be
-    used to perform HyDe search. HyDe search is a RAG-technique, where a
-    query is enhanced by an fictional answer, to increase the cosine similarity
-    between search-query and context
-    :param query: user query
-    :param llm: llm, to generate the fictional answer
-    :return: the fictional answer to the query
-    """
-    # general formulated, works ok.
-    example_prompt = """
-    You are a knowledgeable and helpful research assistant.
-    Provide an example answer to the given question,
-    that could be found in a scholarly or professional document or an 
-    scientific paper, and 
-    might actually be true.
-    """
+    Generate a hallucinated answer for the given query for HyDE search.
 
+    :param query: User query
+    :param llm: Language model to generate the fictional answer
+    :return: Fictional answer to the query
+    """
     messages = [
-        (
-            "system",
-            example_prompt
-        ),
-        (
-            "human",
-            query
-        ),
+        ("system", HYDE_PROMPT_V2),
+        ("human", query),
     ]
     response = llm.invoke(messages)
-    content = response.content
-    return content
+    return response.content
 
 def project_embeddings(embeddings, umap_transform):
     """
@@ -148,20 +77,22 @@ def project_embeddings(embeddings, umap_transform):
     projected_embeddings = umap_transform.transform(embeddings)
     return projected_embeddings
 
-# the loading of the model has to be cached, when running this via streamlit
-# otherwise the download happens every time
-def rerank_by_crossencoder(retrieved_docs, original_query, top_k=3):
+def rerank_by_crossencoder(retrieved_docs: List[Any], original_query: str, top_k: int = 3) -> List[Any]:
+    """
+    Rerank retrieved documents using a cross-encoder model.
+
+    :param retrieved_docs: List of retrieved documents
+    :param original_query: Original user query
+    :param top_k: Number of top documents to return
+    :return: List of top reranked documents
+    """
     try:
         cross_encoder = CrossEncoder("cross-encoder/ms-marco-MiniLM-L-6-v2")
         pairs = [[original_query, doc] for doc in retrieved_docs]
         scores = cross_encoder.predict(pairs)
 
         top_indices = np.argsort(scores)[::-1][:top_k]
-        top_documents = [retrieved_docs[i] for i in top_indices]
-        return top_documents
-    except ConnectionError:
-        print("Unable to connect to the model server. Skipping reranking.")
-        return retrieved_docs[:top_k]  # Return top k documents without reranking
+        return [retrieved_docs[i] for i in top_indices]
     except Exception as e:
         print(f"An error occurred during reranking: {str(e)}")
         return retrieved_docs[:top_k]  # Return top k documents without reranking
