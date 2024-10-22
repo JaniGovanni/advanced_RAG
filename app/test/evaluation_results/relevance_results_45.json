@@ -8,7 +8,8 @@
     "reranking": true,
     "use_bm25": false,
     "history_aware": false,
-    "situate_context": true
+    "situate_context": true,
+     "model": "llama3.2:1b"
   },
   "results": [
     {

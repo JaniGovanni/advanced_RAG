@@ -13,7 +13,8 @@ from unstructured.documents.elements import Element
 
 
 class ContextualEmbedder:
-    def __init__(self, model: str = "llama3.2:1b", base_url: Optional[str] = None):
+    # llama3.2:1b is the fastest model
+    def __init__(self, model: str = "qwen2.5:1.5b", base_url: Optional[str] = None):
         self.llm = ChatOllama(
             model=model,
             temperature=0,
