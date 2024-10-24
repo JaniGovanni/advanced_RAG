@@ -14,14 +14,11 @@ import dotenv
 # Load environment variables
 dotenv.load_dotenv()
 
-@pytest.fixture
-def pdf_path():
+
+def test_process_doc_with_contextual_embedding():
     app_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-    return os.path.join(app_dir, 'test', 'documents_test', 'el_nino.pdf')
+    pdf_path = os.path.join(app_dir, 'test', 'documents_test', 'el_nino.pdf')
 
-
-def test_process_doc_with_contextual_embedding(pdf_path):
-   
     # Ensure the file exists
     assert os.path.exists(pdf_path), f"Test file not found: {pdf_path}"
 
@@ -51,3 +48,8 @@ def test_process_doc_with_contextual_embedding(pdf_path):
     assert len(result[0].page_content.split('\n')) > 1  # The original content plus the added context
     # toDo: find a better way to assert the contextual summary
     assert "El Niño" in result[0].page_content
+
+    # pytest app/contextual_embedding/test_contextual_embedding.py
+
+if __name__ == "__main__":
+    test_process_doc_with_contextual_embedding()

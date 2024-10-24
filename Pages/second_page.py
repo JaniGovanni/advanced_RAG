@@ -1,9 +1,7 @@
 import streamlit as st
-from app.doc_processing import process_doc
-from app.doc_processing.filters import (unwanted_titles_list_default,
-                                        unwanted_categories_default)
-from app.vectorstore import get_chroma_store_as_retriever, add_docs_to_store
-from tqdm.auto import tqdm 
+from app.doc_processing.filters.default_selections import (unwanted_titles_list_default,
+                                                           unwanted_categories_default)
+from pages.utils import api_process_doc
 
 
 if 'unwanted_titles' and 'unwanted_categories' not in st.session_state:
@@ -27,7 +25,7 @@ new_title = st.text_input("Add a new title:",
                           placeholder="unwanted title",
                           on_change=submit)
 
-st.session_state['process_config'].unwanted_title_list = st.multiselect("These titles are selected",
+st.session_state['process_config'].unwanted_titles_list = st.multiselect("These titles are selected",
                                                                 options=st.session_state['unwanted_titles'],
                                                                 default=st.session_state['process_config'].unwanted_titles_list)
 
@@ -42,9 +40,10 @@ go_further = st.button("Click when finished")
 
 if go_further:
     with st.spinner("Processing documents and updating the database..."):
-        retriever = get_chroma_store_as_retriever()
-        processed_docs = process_doc(st.session_state['process_config'])
-        add_docs_to_store(retriever, processed_docs)
+        api_response = api_process_doc(st.session_state['process_config'])
+        
+        if api_response:
+            st.success(api_response['message'])
     st.subheader("Finished processing. Go to the page shown in the sidebar")
     st.sidebar.page_link('main.py', label='Home')
 

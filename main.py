@@ -2,29 +2,16 @@
 
 import os
 import streamlit as st
-from app.vectorstore import get_chroma_store_as_retriever, get_stored_files_and_tags, get_stored_tags_and_files
-from app.doc_processing import ProcessDocConfig
-from app.chat import ChatConfig
+from pages.utils import upload_file
 from dotenv import load_dotenv
+from app.api_setup.dataclasses_api import ProcessDocConfigAPI, ChatConfigAPI
+from pages.utils import get_stored_tags_and_files
 
 load_dotenv()
 
-def save_file(file):
-    """
-    saves the uploaded file in a specified directory
-    """
-    if not os.path.exists(os.getenv('UPLOADED_FILES_PATH')):
-        os.makedirs(os.getenv('UPLOADED_FILES_PATH'))
-    filepath = os.path.join(os.getenv('UPLOADED_FILES_PATH'), file.name)
-    with open(filepath, 'wb') as f:
-        f.write(file.getbuffer())
-    st.success('file saved.')
-    return filepath
-
 
 st.header("File Upload")
-retriever = get_chroma_store_as_retriever()
-tag_to_files = get_stored_tags_and_files(retriever)
+tag_to_files = get_stored_tags_and_files()
 if "tag" not in st.session_state:
     st.session_state['tag'] = ''
 
@@ -38,22 +25,23 @@ if st.session_state['tag']:
     with col1:
         file = st.file_uploader("Upload File (.pdf, .docx, .pptx, .xlsx,...)")
         if file is not None:
-            filepath = save_file(file)
-            st.session_state['process_config'] = ProcessDocConfig(tag=st.session_state['tag'],
-                                                                  filepath=filepath)
-            st.write(":green[Go to the next page shown in the sidebar]")
-            st.sidebar.page_link('pages/second_page.py', label='document processing config')
-            # debugging
-            print(st.session_state['process_config'].source)
-            print(st.session_state['process_config'].filepath)
-            print(st.session_state['process_config'].tag)
+            filepath = upload_file(file)
+            if filepath:
+                st.session_state['process_config'] = ProcessDocConfigAPI(tag=st.session_state['tag'],
+                                                                         filepath=filepath)
+                st.write(":green[Go to the next page shown in the sidebar]")
+                st.sidebar.page_link('pages/second_page.py', 
+                                     label='document processing config')
+                # debugging
+                #print(st.session_state['process_config'].filepath)
+                #print(st.session_state['process_config'].tag)
 
 
     with col2:
         url = st.text_input("or define an url. PLEASE DONT DO BOTH", placeholder='url')
         if url:
-            st.session_state['process_config'] = ProcessDocConfig(tag=st.session_state['tag'],
-                                                                  url=url)
+            st.session_state['process_config'] = ProcessDocConfigAPI(tag=st.session_state['tag'],
+                                                                     url=url)
             st.write(":green[Go to the next page shown in the sidebar]")
             st.sidebar.page_link('pages/second_page.py', label='document processing config')
 
@@ -85,14 +73,7 @@ for i, tag in enumerate(tag_to_files.keys()):
 for tag, clicked in tag_to_button.items():
     if clicked:
         st.write(f":green[To chat about {tag} go to the page shown in the sidebar]")
-        st.session_state['chat_config'] = ChatConfig(tag=tag, llm_choice="groq")  # Set initial choice to "groq"
+        st.session_state['chat_config'] = ChatConfigAPI(tag=tag, llm_choice="groq")  
         st.sidebar.page_link('pages/chat_page.py', label='chatting page')
-
-# URI = 'bolt://localhost'   # neo4j:// also works
-# AUTH = ('neo4j', '12345678')
-# from neo4j import GraphDatabase
-#
-# with GraphDatabase.driver(URI, auth=AUTH) as driver:
-#     driver.verify_connectivity()
 
 

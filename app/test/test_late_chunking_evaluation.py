@@ -31,13 +31,13 @@ class TestLateChunkingEvaluation(unittest.TestCase):
         config = ChatConfig(
             tag=tag,
             k=10,
-            llm=app.llm.get_groq_llm(),
+            llm_choice="groq",
             expand_by_answer=False,
-            expand_by_mult_queries=False,
+            expand_by_mult_queries=True,
             reranking=True,
-            use_bm25=False
+            use_bm25=False,
+            history_awareness=False
         )
-        config.history_awareness(False)
         return config
 
     @staticmethod
@@ -104,7 +104,7 @@ class TestLateChunkingEvaluation(unittest.TestCase):
             "expand_by_mult_queries": chat_config.expand_by_mult_queries,
             "reranking": chat_config.reranking,
             "use_bm25": chat_config.use_bm25,
-            "history_aware": chat_config.history_aware
+            "history_awareness": chat_config.history_awareness
         }
 
         for entry in self.evaluation_data:

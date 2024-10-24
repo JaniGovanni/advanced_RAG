@@ -29,12 +29,12 @@ class TestRAGEvaluation(unittest.TestCase):
             tag="test",
             k=10,
             llm_choice="groq",
-            expand_by_answer=False,
-            expand_by_mult_queries=False,
+            expand_by_answer=True,
+            expand_by_mult_queries=True,
             reranking=True,
-            use_bm25=False
+            use_bm25=False,
+            history_awareness=False
     )
-        config.set_history_awareness(False)
         return config
 
 
@@ -66,7 +66,7 @@ class TestRAGEvaluation(unittest.TestCase):
                         local=True,
                         filepath=temp_file_path,
                         url=None,
-                        situate_context=True)
+                        situate_context=False)
                     # Process the golden document content
                     processed_chunks = process_doc(config)
                     # Add processed chunks to the vector store
@@ -99,7 +99,7 @@ class TestRAGEvaluation(unittest.TestCase):
             "expand_by_mult_queries": chat_config.expand_by_mult_queries,
             "reranking": chat_config.reranking,
             "use_bm25": chat_config.use_bm25,
-            "history_aware": chat_config.history_aware
+            "history_awareness": chat_config.history_awareness
         }
 
         for entry in self.evaluation_data:

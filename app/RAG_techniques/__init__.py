@@ -5,7 +5,7 @@ from typing import List, Any, Dict
 from pydantic import BaseModel, Field
 
 class MultiQueryOutput(BaseModel):
-    queries: List[str] = Field(..., min_items=5, max_items=5)
+    queries: List[str] = Field(..., min_length=5, max_length=5)
 
 
 def generate_multi_query(query: str, llm: Any) -> List[str]:

@@ -1,7 +1,6 @@
 import sys
 import os
 
-# Add the project root directory to the Python path
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
 sys.path.insert(0, project_root)
 
@@ -10,6 +9,8 @@ import pytest
 from app.doc_processing.filters import (
     filter_elements_by_title,
     filter_elements_by_unwanted_categories,
+)
+from app.doc_processing.filters.default_selections import (
     unwanted_titles_list_default,
     unwanted_categories_default
 )
@@ -166,7 +167,7 @@ def test_filter_and_chunk():
     assert filtered_chunks[0].text == "Introduction\n\nThis is the introduction."
 
 if __name__ == "__main__":
-    #test_process_doc()
+    test_process_doc()
     test_filter_elements_by_title()
     test_filter_elements_by_unwanted_categories()
     test_filter_and_chunk()

@@ -1,13 +1,7 @@
-from typing import List, Union
-from langchain.memory import ConversationBufferWindowMemory
-from langchain_core.messages import HumanMessage
+from typing import List, Union, Optional, Dict
 from langchain_core.language_models import BaseLanguageModel
-from langchain_community.retrievers import BM25Retriever
-from langchain_core.documents import Document
-
 from app.vectorstore import get_chroma_store_as_retriever
 import app.llm
-from app.chains import HistoryAwareQueryChain
 import app.RAG_techniques as RAG_techniques
 
 
@@ -25,49 +19,30 @@ class ChatConfig:
         tag: str,
         expand_by_answer: bool = False,
         expand_by_mult_queries: bool = False,
+        history_awareness: bool = False,
         reranking: bool = True,
         k: int = 10,
         llm_choice: str = "groq",
-        use_bm25: bool = False
+        use_bm25: bool = False,
+        conversation_history: Optional[List[Union[Dict]]] = None
     ):
         self.tag = tag
         self.expand_by_answer = expand_by_answer
         self.expand_by_mult_queries = expand_by_mult_queries
+        self.history_awareness = history_awareness
         self.reranking = reranking
         self.k = k
         self.llm_choice = llm_choice
         self.use_bm25 = use_bm25
         self.llm = self.get_llm()
-        self.memory = ConversationBufferWindowMemory(
-            memory_key="history",
-            output_key="response",
-            return_messages=True,
-            k=4
-        )
-        self.history_aware = False
-        self.history_chain = None
-        self.bm25_retriever = None
-
-    def set_history_awareness(self, enabled: bool) -> None:
-        """Enable or disable history awareness."""
-        self.history_aware = enabled
-        if enabled:
-            self.history_chain = HistoryAwareQueryChain(memory=self.memory, llm=self.llm)
+        
+        self.conversation_history = conversation_history or []
 
     def get_llm(self) -> BaseLanguageModel:
         """Get the language model based on the chosen option."""
         return app.llm.get_ollama_llm() if self.llm_choice == "ollama" else app.llm.get_groq_llm()
-    
-    def set_use_bm25(self, flag):
-        self.use_bm25 = flag
-    def set_mult_queries(self, flag):
-        self.expand_by_mult_queries = flag
-
-    def set_exp_by_answer(self, flag):
-        self.expand_by_answer = flag
-
-    def set_reranking(self, flag):
-        self.reranking = flag
+      
+      
 
 from app.utils_chat import history_aware_query, retrieve_documents, additional_bm25_retrieval
 
