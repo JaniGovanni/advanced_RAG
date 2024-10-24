@@ -4,7 +4,7 @@ import faiss
 from langchain_community.docstore.in_memory import InMemoryDocstore
 from langchain_community.vectorstores import FAISS
 from uuid import uuid4
-from app.vectorstore import save_uuids
+from app.source_handling import save_uuids
 from app.vectorstore.embeddings import JinaEmbeddings
 from dotenv import load_dotenv
 from typing import List, Tuple

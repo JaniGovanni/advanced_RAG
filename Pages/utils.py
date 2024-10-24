@@ -50,7 +50,7 @@ def upload_file(file):
         data = response.json()
         if response.status_code == 200:
             st.success('File uploaded successfully.')
-            return data.get('filepath')
+            return data.get('file_id')
         else:
             st.error(f'Error uploading file: {data.get("message", "Unknown error")}')
     
@@ -61,4 +61,4 @@ def upload_file(file):
     except Exception as e:
         st.error(f'Unexpected error: {str(e)}')
     
-    return data.get('filepath')
+    return None

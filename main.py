@@ -25,10 +25,12 @@ if st.session_state['tag']:
     with col1:
         file = st.file_uploader("Upload File (.pdf, .docx, .pptx, .xlsx,...)")
         if file is not None:
-            filepath = upload_file(file)
-            if filepath:
+            filepath_id = upload_file(file)
+            # debugging
+            st.write(filepath_id)
+            if filepath_id:
                 st.session_state['process_config'] = ProcessDocConfigAPI(tag=st.session_state['tag'],
-                                                                         filepath=filepath)
+                                                                         filepath_id=filepath_id)
                 st.write(":green[Go to the next page shown in the sidebar]")
                 st.sidebar.page_link('pages/second_page.py', 
                                      label='document processing config')
@@ -38,15 +40,13 @@ if st.session_state['tag']:
 
 
     with col2:
-        url = st.text_input("or define an url. PLEASE DONT DO BOTH", placeholder='url')
+        url = st.text_input("or define an url.", placeholder='url')
         if url:
             st.session_state['process_config'] = ProcessDocConfigAPI(tag=st.session_state['tag'],
                                                                      url=url)
             st.write(":green[Go to the next page shown in the sidebar]")
             st.sidebar.page_link('pages/second_page.py', label='document processing config')
 
-            # debugging
-            print(st.session_state['process_config'].source)
 
 #st.write("\n\n")
 #st.subheader("Files and their tags in the vectorstore:")

@@ -19,7 +19,7 @@ def evaluate_answer(query: str, generated_answer: str, reference_answer: str) ->
     int: A score from 0 to 100 indicating the quality and relevance of the answer.
     """
     
-    # Initialize the Groq LLM
+  
     llm = get_groq_llm()
 
     # Define the evaluation prompt
@@ -68,7 +68,7 @@ def evaluate_answer(query: str, generated_answer: str, reference_answer: str) ->
         format_instructions=format_instructions
     )
 
-    # Get the LLM response
+    
     response = llm.invoke(formatted_prompt)
 
     # Parse the response

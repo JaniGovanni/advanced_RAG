@@ -3,15 +3,17 @@ from unstructured.partition.auto import partition
 from unstructured.chunking.title import chunk_by_title
 from app.doc_processing.API import process_api
 from app.doc_processing.filters import (filter_elements_by_title,
-                                        filter_elements_by_unwanted_categories,
-                                        unwanted_titles_list_default,
-                                        unwanted_categories_default)
+                                        filter_elements_by_unwanted_categories)
+from app.doc_processing.filters.default_selections import (unwanted_titles_list_default,
+                                                           unwanted_categories_default)
+                                    
 from app.doc_processing.metadata import convert_to_document
 import logging
 import os
 from app.contextual_embedding import create_contextual_embeddings_with_progress
 from app.doc_processing.late_chunking import apply_late_chunking  
 from typing import List
+from app.source_handling import get_filepath_from_id
 
 
 
@@ -21,6 +23,7 @@ class ProcessDocConfig:
     unwanted_categories_list: list
     tag: str
     filepath: str | None
+    filepath_id: str | None
     url: str | None
     source: str
     situate_context: bool
@@ -34,7 +37,8 @@ class ProcessDocConfig:
                  filepath=None,
                  url=None,
                  situate_context=False,
-                 late_chunking=False  
+                 late_chunking=False,
+                 filepath_id=None
                  ):
         self.local = local
         self.unwanted_titles_list = unwanted_titles_list
@@ -44,7 +48,13 @@ class ProcessDocConfig:
         self.url = url
         self.situate_context = situate_context
         self.late_chunking = late_chunking  
-        if filepath is not None:
+        self.filepath_id = filepath_id
+
+        # filepath_id makes the precedence
+        if filepath_id is not None:
+            self.filepath = get_filepath_from_id(filepath_id)
+            self.source = os.path.basename(self.filepath) if self.filepath else None
+        elif filepath is not None:
             self.source = os.path.basename(filepath)
         else:
             self.source = url

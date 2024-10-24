@@ -1,9 +1,8 @@
 import app.RAG_techniques as RAG_techniques
-from langchain_core.messages import HumanMessage
 from typing import List, Tuple
 from langchain_core.documents import Document
 from langchain_community.retrievers import BM25Retriever
-from app.vectorstore import get_documents_by_tag
+from app.source_handling import get_documents_by_tag
 from app.chat import ChatConfig
 from app.chains import HistoryAwareQueryChain
 
@@ -20,8 +19,6 @@ def history_aware_query(chat_config: ChatConfig, query: str) -> str:
         processed_query = history_chain.reformulate(chat_config.conversation_history, query)
     else:
         processed_query = query
-        # Append the query to the conversation history
-        #chat_config.conversation_history.append({"type": "human", "content": query})
     return processed_query
 
 

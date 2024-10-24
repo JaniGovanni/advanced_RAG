@@ -9,8 +9,7 @@ import json
 from app.doc_processing import process_doc, ProcessDocConfig
 from app.vectorstore.experimental import get_faiss_store_as_retriever, add_docs_to_faiss_store
 from app.chat import ChatConfig, get_result_docs, create_RAG_output
-import app.llm
-from app.test.end_to_end_eval import evaluate_answer
+from app.test.end_to_end_eval import evaluate_answer_v1
 from app.doc_processing.late_chunking import apply_late_chunking
 import tempfile
 import os
@@ -115,7 +114,7 @@ class TestLateChunkingEvaluation(unittest.TestCase):
             context = ''.join(result_docs)
             final_answer = create_RAG_output(context, query, chat_config.llm)
         
-            relevance_score = evaluate_answer(query, final_answer, expected_answer)
+            relevance_score = evaluate_answer_v1(query, final_answer, expected_answer)
             relevance_scores.append(relevance_score)
             
             results.append({

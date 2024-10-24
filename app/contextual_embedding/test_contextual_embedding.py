@@ -2,16 +2,15 @@ import sys
 import os
 import pytest
 
-# Add the project root directory to the Python path
+
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
 sys.path.insert(0, project_root)
-
 
 from app.doc_processing import process_doc, ProcessDocConfig
 import os
 import dotenv
 
-# Load environment variables
+
 dotenv.load_dotenv()
 
 

@@ -1,75 +1,12 @@
-from langchain.chains import ConversationChain
-from langchain_ollama import ChatOllama
-from app.memory import build_window_buffer_memory, build_conversation_buffer_memory
-from langchain.prompts import PromptTemplate
-from langchain.schema import BaseMemory
 from langchain_core.messages import HumanMessage, AIMessage
 import traceback
-
-# class HistoryAwareQueryChain:
-#     def __init__(self, memory: BaseMemory, llm, verbose: bool = False):
-#         """
-#         Creates a chain that reformulates a user's query based on conversation history.
-
-#         :param memory: Memory object to store conversation history
-#         :param llm: Language model to use for reformulation
-#         :param verbose: Whether to print verbose output
-#         """
-#         self.memory = memory
-#         self.llm = llm
-
-#         prompt_template = """
-#         Given a chat history and the latest user question, formulate a standalone question
-#         that can be understood without the chat history. Be concise.
-#         Do NOT answer the question, just reformulate if needed or RETURN the question as is.
-
-#         Current conversation:
-#         {history}
-#         Human: {input}
-#         AI:
-#         """
-#         self.conversation = ConversationChain(
-#             llm=self.llm,
-#             verbose=verbose,
-#             memory=self.memory,
-#             prompt=PromptTemplate.from_template(prompt_template)
-#         )
-
-#     def reformulate(self, input_query: str) -> str:
-#         """
-#         Reformulates the given input query using the conversation chain.
-
-#         :param input_query: The input query to reformulate
-#         :return: The reformulated query
-#         """
-#         response = self.conversation.invoke(input=input_query, return_only_output=True)
-#         self._clear_last_memory_entry()
-#         return response['response']
-
-#     def _clear_last_memory_entry(self):
-#         """Removes the last entry from the memory to avoid storing the reformulated query."""
-#         if hasattr(self.memory, 'chat_memory') and self.memory.chat_memory.messages:
-#             self.memory.chat_memory.messages.pop()
-
-#     def _print_memory_messages(self):
-#         """Prints all messages in the memory for debugging purposes."""
-#         print("--- Debug: Memory Messages ---")
-#         if hasattr(self.memory, 'chat_memory'):
-#             for message in self.memory.chat_memory.messages:
-#                 print(f"{message.type}: {message.content}")
-#         else:
-#             print("Memory does not have chat_memory attribute")
-#         print("-------------------------------")
-
 from langchain_core.prompts import ChatPromptTemplate
-from langchain_core.runnables import RunnablePassthrough
 from typing import List, Dict
-from langchain_core.messages import HumanMessage, AIMessage, messages_from_dict
+from langchain_core.messages import HumanMessage, AIMessage
 
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
-from langchain_core.runnables import RunnablePassthrough, RunnableWithMessageHistory
-from typing import List, Dict, Callable
-from langchain_core.messages import messages_from_dict
+from langchain_core.runnables import RunnableWithMessageHistory
+from typing import List, Dict
 
 class HistoryAwareQueryChain:
     def __init__(self, llm):
@@ -140,5 +77,5 @@ class HistoryAwareQueryChain:
         except Exception as e:
             error_message = f"Error in reformulate method:\n{str(e)}\n\nTraceback:\n{traceback.format_exc()}"
             print(error_message)
-            # You might want to log this error or handle it in a way that fits your application
-            raise  # Re-raise the ex
+    
+            raise  

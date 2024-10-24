@@ -47,6 +47,8 @@ class TestAPI(unittest.TestCase):
         )
         response = requests.post(f'{cls.base_url}/process_doc', json=test_data.model_dump())
         assert response.status_code == 200, f"Failed to process document in setup. Status code: {response.status_code}"
+
+        
     def test_history_awareness(self):
         
         chat_config = ChatConfigAPI(

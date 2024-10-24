@@ -20,4 +20,5 @@ bugs:
 
 - when adding something to the unwanted section list and hit doc processing before pressing enter,
   the unwanted title is added 2 times to the list (second_page.py)
+- bm25 retrieval helper functions must be tested
 

@@ -6,11 +6,13 @@ project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..
 sys.path.insert(0, project_root)
 from app.doc_processing import ProcessDocConfig, process_doc
 from app.chat import ChatConfig, get_result_docs, create_RAG_output
-from app.vectorstore import get_chroma_store_as_retriever, add_docs_to_store, get_stored_tags_and_files
+from app.vectorstore import get_chroma_store_as_retriever, add_docs_to_store
+from app.source_handling import get_stored_tags_and_files
 import os
 from werkzeug.utils import secure_filename
 import os
-
+import uuid
+from app.source_handling import filepath_to_id
 # python api.py
 
 app = Flask(__name__)
@@ -31,7 +33,9 @@ def upload_file():
             os.makedirs(upload_dir, exist_ok=True)
             filepath = os.path.join(upload_dir, filename)
             file.save(filepath)
-            return jsonify({"status": "success", "message": "File uploaded successfully", "filepath": filepath}), 200
+            file_id = str(uuid.uuid4())  # Generate a unique identifier
+            filepath_to_id(filepath, file_id)
+            return jsonify({"status": "success", "message": "File uploaded successfully", "file_id": file_id}), 200
     except Exception as e:
         app.logger.error(f"Error in file upload: {str(e)}")
         return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500

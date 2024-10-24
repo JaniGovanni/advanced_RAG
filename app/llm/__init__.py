@@ -2,7 +2,6 @@ from langchain_ollama import ChatOllama
 import os
 import dotenv
 from langchain_groq import ChatGroq
-import app.llm
 from transformers import AutoTokenizer
 
 dotenv.load_dotenv()

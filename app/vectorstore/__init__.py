@@ -1,40 +1,12 @@
 from dotenv import load_dotenv
-from langchain_community.embeddings import OllamaEmbeddings
 from langchain_chroma import Chroma
 import os
 from uuid import uuid4
-import json
 from langchain_community.vectorstores.utils import filter_complex_metadata
-from langchain_core.documents import Document
 from .embeddings import get_ollama_embeddings, JinaEmbeddings
-
+from app.source_handling import save_uuids
 
 load_dotenv()
-
-def get_documents_by_tag(retriever, tag):
-    """
-    Retrieves all documents from the vectorstore that have a specific tag.
-    
-    :param retriever: The retriever object containing the vectorstore
-    :param tag: The tag to filter documents by
-    :return: A list of Document objects with the specified tag
-    """
-    # Assuming retriever.vectorstore is a Chroma instance
-    collection = retriever.vectorstore._collection
-
-    # Get all documents for the given tag using Chroma's where clause
-    results = collection.get(
-        where={"tag": tag},
-        include=['metadatas', 'documents']
-    )
-
-    # Create Document objects from the results
-    documents = [
-        Document(page_content=doc, metadata=metadata) 
-        for doc, metadata in zip(results['documents'], results['metadatas'])
-    ]
-
-    return documents
 
 
 def get_chroma_store_as_retriever(embeddings=None):
@@ -66,88 +38,5 @@ def add_docs_to_store(retriever, docs):
     retriever.vectorstore.add_documents(filtered_docs, ids=uuids)
 
 
-def save_uuids(source, new_uuids, vectorstore, file_path=None):
-    """
-    saves a source to doc_id mapping to a seperate file. Overwrite any data,
-    with the same source name.
-    """
-    if file_path is None:
-        file_path = os.getenv("SOURCE_TO_ID_PATH")
-    # Try to load existing data, or create an empty dict if file doesn't exist
-    try:
-        with open(file_path, 'r') as f:
-            existing_data = json.load(f)
-    except FileNotFoundError:
-        existing_data = {}
-    
-    # check if source already exist
-    if source in existing_data:
-        existing_uuids = existing_data[source]
-        # delete existing source for newer version
-        vectorstore.delete(ids=existing_uuids)
-        existing_data.update({source: new_uuids})
-    else:
-        existing_data.update({source: new_uuids})
-    with open(file_path, 'w') as f:
-        json.dump(existing_data, f, indent=4)
-
-
-
-def delete_file_from_store(retriever, source:str):
-    """
-    Deletes a source from the vectorstore and actualize the source_to_ids file.
-    """
-    try:
-        with open(os.getenv("SOURCE_TO_ID_PATH"), 'r') as f:
-            existing_data = json.load(f)
-        ids_to_delete = existing_data[source]
-        retriever.vectorstore.delete(ids=ids_to_delete)
-        del existing_data[source]
-        with open(os.getenv("SOURCE_TO_ID_PATH"), 'w') as f:
-            json.dump(existing_data, f, indent=4)
-    except:
-        print("Source not found.")
-        return
-
-
-def get_stored_files_and_tags(retriever):
-    """
-    gets all files and the tags from them in a vectorstore.
-    """
-    try:
-        with open(os.getenv("SOURCE_TO_ID_PATH"), 'r') as f:
-            existing_data = json.load(f)
-    except FileNotFoundError:
-        return {}
-    filenames = existing_data.keys()
-    file_to_tag = {}
-    for filename in filenames:
-        # there must be a better way to do this
-        ex_doc = retriever.vectorstore.similarity_search('', filter={'source':filename})[0]
-        tag = ex_doc.metadata['tag']
-        file_to_tag[filename] = tag
-    return file_to_tag
-
-def get_stored_tags_and_files(retriever, filename=None):
-    """
-    gets all tags and their files in a vectorstore.
-    """
-    if filename is None:
-        filename = os.getenv("SOURCE_TO_ID_PATH")
-    try:
-        with open(filename, 'r') as f:
-            existing_data = json.load(f)
-    except FileNotFoundError:
-        return {}
-    filenames = existing_data.keys()
-    tag_to_file = {}
-    for filename in filenames:
-        # there must be a better way to do this
-        ex_doc = retriever.vectorstore.similarity_search('', filter={'source':filename})[0]
-        if ex_doc.metadata['tag'] not in tag_to_file:
-            tag_to_file[ex_doc.metadata['tag']] = [filename]
-        else:
-            tag_to_file[ex_doc.metadata['tag']].append(filename)
-    return tag_to_file
 
 

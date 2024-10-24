@@ -8,6 +8,7 @@ class ProcessDocConfigAPI(BaseModel):
     unwanted_titles_list: Optional[List[str]] = unwanted_titles_list_default
     unwanted_categories_list: Optional[List[str]] = unwanted_categories_default
     local: bool = True
+    filepath_id: Optional[str] = None
     filepath: Optional[str] = None
     url: Optional[str] = None
     situate_context: bool = False
