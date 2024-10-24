@@ -1,12 +1,12 @@
 from pydantic import BaseModel
 from typing import List, Optional, Union
 from langchain_core.messages import HumanMessage, AIMessage
-from app.doc_processing.filters import unwanted_titles_list_default, unwanted_categories_default
+#from app.doc_processing.filters import unwanted_titles_list_default, unwanted_categories_default
 
 class ProcessDocConfigAPI(BaseModel):
     tag: str
-    unwanted_titles_list: Optional[List[str]] = unwanted_titles_list_default
-    unwanted_categories_list: Optional[List[str]] = unwanted_categories_default
+    unwanted_titles_list: Optional[List[str]] = None #unwanted_titles_list_default
+    unwanted_categories_list: Optional[List[str]] = None #unwanted_categories_default
     local: bool = True
     filepath_id: Optional[str] = None
     filepath: Optional[str] = None

@@ -1,11 +1,15 @@
 import streamlit as st
-from app.doc_processing.filters.default_selections import (unwanted_titles_list_default,
-                                                           unwanted_categories_default)
-from pages.utils import api_process_doc
+from pages.utils import api_process_doc, get_default_lists
 
 
-if 'unwanted_titles' and 'unwanted_categories' not in st.session_state:
+# Fetch default lists from the server
+default_lists = get_default_lists()
+unwanted_titles_list_default = default_lists.get('unwanted_titles_list_default', [])
+unwanted_categories_default = default_lists.get('unwanted_categories_default', [])
+
+if 'unwanted_titles' not in st.session_state:
     st.session_state['unwanted_titles'] = unwanted_titles_list_default
+if 'unwanted_categories' not in st.session_state:
     st.session_state['unwanted_categories'] = unwanted_categories_default
 
 st.subheader("At first you have to choose some configurations for the document processing. Default should also work fine.")

@@ -3,9 +3,8 @@
 Hello there and welcome to my second project hosted on github. 
 it implements an advanced Retrieval-Augmented Generation (RAG) system for question answering. My goal for this project was, to implement as much as possible from the things i have learned so far, about RAG and ML in general, in this project. I also build this with the intention of modularity, because i will add more things as i go along in my learning. **I try to keep this README as actual as possible, as i implement new things.**
 
-## Agnda
+## Agenda
 
-* implement API calls in streamlit interface
 * implement image support
 
 ## Key features
@@ -19,51 +18,69 @@ The features of this project are:
 5. Provide a flexible and configurable chat interface for interacting with the system.
 6. Include evaluation and testing capabilities to assess the system's performance.
 7. Easy deployment via Streamlit UI and containerisation with docker-compose
+8. Separate frontend (Streamlit) and backend (Flask API) architecture to simplify scaling strategies and improve maintainability:
+   - **Frontend**: Streamlit-based user interface for file upload, configuration, and chat interaction.
+   - **Backend**: Flask API responsible for document processing, vector store operations, and RAG pipeline execution.
 
 ## Key Components
 
 ```
 advanced_rag/
 ├── app/
-│   ├── doc_processing/
+│   ├── api_setup/
 │   │   ├── __init__.py
-│   │   ├── API.py
-│   │   ├── filters.py
-│   │   ├── metadata/
-│   │   └── late_chunking/
-│   ├── vectorstore/
+│   │   ├── dataclasses/
+│   │   ├── test_api.py
+│   │   └── api.py
+│   ├── chains/
 │   │   ├── __init__.py
-│   │   ├── embeddings/
-│   │   └── experimental/
+│   │   └── test_HistoryChain.py
 │   ├── contextual_embedding/
 │   │   └── __init__.py
-│   ├── RAG_techniques/
-│   │   └── __init__.py
-│   ├── chains/
-│   │   └── __init__.py
+│   ├── doc_processing/
+│   │   ├── __init__.py
+│   │   ├── API
+│   │   ├── filters
+│   │   ├── metadata/
+│   │   └── late_chunking/
 │   ├── llm/
 │   │   └── __init__.py
 │   ├── memory/
 │   │   └── __init__.py
-│   ├── chat.py
-│   └── test/
-│       ├── test_rag_evaluation.py
-│       ├── test_rag_pipeline.py
-│       └── test_late_chunking_evaluation.py
+│   ├── RAG_techniques/
+│   │   ├── __init__.py
+│   │   ├── prompts.py
+│   │   └── test_RAG_techniques.py
+│   ├── source_handling/
+│   │   └── __init__.py
+│   ├── test/
+│   │   ├── test_rag_evaluation.py
+│   │   ├── grade_agent.py
+│   │   ├── evaluation_results
+│   │   └── test_late_chunking_evaluation.py
+│   ├── utils_chat/
+│   │   └── __init__.py
+│   ├── source_handling/
+│   │   └── __init__.py
+│   ├── vectorstore/
+│   │   ├── __init__.py
+│   │   ├── embeddings/
+│   │   └── experimental/
+│   └──  chat.py
 |
 ```
 
 ### Key Modules and Their Functions
 
 1. **doc_processing**: Handles document ingestion, parsing, and preprocessing.
-   - Using unstructured library to processes various document types (e.g., PDFs, HTML, xlsx, pptx,...)
+   - Uses the unstructured library to process various document types (e.g., PDFs, HTML, xlsx, pptx,...)
    - Filters unwanted content and categories (customizable)
-   - Chunks documents section based for efficient storage and retrieval
+   - Chunks documents for efficient storage and retrieval
 
 2. **vectorstore**: Manages the vector database for storing and retrieving document embeddings.
+   - Handles creation of vectordatabase 
    - Adds documents to the vector store
-   - Retrieves relevant documents based on queries
-   - Handles document metadata and source tracking
+   - Defines different embedding objects
 
 3. **contextual_embedding**: Generates contextual embeddings for document chunks.
    - Implements contextual retrieval locally (see anthropics post: https://www.anthropic.com/news/contextual-retrieval)
@@ -87,13 +104,24 @@ advanced_rag/
    - Orchestrates the RAG process from query to answer generation
 
 8. **test**: Contains test suites for evaluating the RAG system's performance.
-   - Includes end-to-end tests for the RAG pipeline (primarily to test general functionality)
    - Evaluates answer relevance and correctness based on anthropics RAG evaluation dataset
 
 9. **late_chunking**: Implements advanced document chunking for improved embeddings.
-   - Generates embeddings for entire documents using jina Ai's long context embedding model
+   - Generates embeddings for entire documents using Jina AI's long context embedding model
    - Enhances embedding quality by considering full document context
-   - For more information about the implementation and results see: coobooks/cookbook_late_chunking.ipynb
+   - For more information about the implementation and results see: cookbooks/cookbook_late_chunking.ipynb
+   - Currently not integrated in the main program, because it doesn't provide good results
+
+10. **api_setup**: Manages the API setup for backend operations.
+    - Provides endpoints for document processing and retrieval
+    - Handles API requests and responses for the RAG system
+
+11. **source_handling**: Manages file paths and source-related operations.
+    - Retrieves file paths from IDs
+    - Manages source metadata
+
+12. **utils_chat**: Contains utility functions for chat operations.
+    - Provides helper functions for chat configuration and management
 
 The system is designed to be modular and configurable, allowing for easy experimentation with different RAG techniques, language models, and document processing methods. The evaluation framework helps in assessing the system's performance and identifying areas for improvement.
 
@@ -119,8 +147,12 @@ Run the install_ollama.sh script to install ollama and the required models on yo
 currently the volume `advanced_rag_storage` is created in the default path of the docker installation, which is `/var/lib/docker/volumes/advanced_rag_storage/data` on linux. if you want another path on your system you have to insert it here in the docker-compose.yml file:
 
 ```
-volumes:
-  - path/to/your/volume:/data
+api-server:
+.
+.
+.
+   volumes:
+      - path/to/your/volume:/data
 ```
 
 
@@ -159,6 +191,7 @@ This project uses Streamlit to provide an interactive web interface for the adva
      - Multiple query formulation
      - Cross-encoder reranking
      - adding BM25 keyword search
+   - You can reset your conversation with the Buttom in the sidebar
    - Interact with the chatbot using the processed documents
 
 ### Tips

@@ -10,7 +10,7 @@ from app.doc_processing import process_doc, ProcessDocConfig
 from app.vectorstore import get_chroma_store_as_retriever, add_docs_to_store
 from app.chat import ChatConfig, get_result_docs, create_RAG_output
 import app.llm
-from app.test.end_to_end_eval import evaluate_answer_v1
+from app.test.grader_agent import evaluate_answer_v1
 import tempfile
 import os
 import shutil

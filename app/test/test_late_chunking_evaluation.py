@@ -9,7 +9,7 @@ import json
 from app.doc_processing import process_doc, ProcessDocConfig
 from app.vectorstore.experimental import get_faiss_store_as_retriever, add_docs_to_faiss_store
 from app.chat import ChatConfig, get_result_docs, create_RAG_output
-from app.test.end_to_end_eval import evaluate_answer_v1
+from app.test.grader_agent import evaluate_answer_v1
 from app.doc_processing.late_chunking import apply_late_chunking
 import tempfile
 import os

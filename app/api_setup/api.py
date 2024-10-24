@@ -13,9 +13,25 @@ from werkzeug.utils import secure_filename
 import os
 import uuid
 from app.source_handling import filepath_to_id
+from app.doc_processing.filters.default_selections import (
+    unwanted_titles_list_default,
+    unwanted_categories_default
+)
 # python api.py
 
 app = Flask(__name__)
+
+@app.route('/get_default_lists', methods=['GET'])
+def get_default_lists():
+    try:
+        default_lists = {
+            "unwanted_titles_list_default": unwanted_titles_list_default,
+            "unwanted_categories_default": unwanted_categories_default
+        }
+        return jsonify({"status": "success", "default_lists": default_lists}), 200
+    except Exception as e:
+        app.logger.error(f"Unexpected error: {str(e)}")
+        return jsonify({"status": "error", "message": str(e)}), 500
 
 @app.route('/upload_file', methods=['POST'])
 def upload_file():
@@ -99,4 +115,4 @@ def api_get_result_docs():
         return jsonify({"status": "error", "message": str(e)}), 500
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5001) 
+    app.run(host='0.0.0.0', port=8503)

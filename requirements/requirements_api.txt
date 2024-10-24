@@ -213,3 +213,7 @@ faiss-cpu==1.7.4
 jinaai==0.2.10
 transformers==4.44.2
 torch==2.4.0
+
+werkzeug==3.0.1
+flask==3.0.2
+pydantic==2.8.2

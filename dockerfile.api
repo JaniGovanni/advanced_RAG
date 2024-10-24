@@ -40,7 +40,7 @@ ENV OLLAMA_BASE_URL=http://host.docker.internal:11434
 RUN mkdir -p /data
 
 # Run app.py when the container launches
-CMD ["python", "application/app/api_setup/test_api.py"]
+CMD ["python", "app/api_setup/api.py"]
 
 # Build the Docker image
 # docker login

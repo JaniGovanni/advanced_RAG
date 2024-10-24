@@ -3,9 +3,18 @@ import requests
 from dotenv import load_dotenv
 import os
 
-load_dotenv('app/.env')
+#load_dotenv('app/.env')
 
 BASE_URL = os.getenv('BASE_URL')
+
+def get_default_lists():
+    response = requests.get(f"{BASE_URL}/get_default_lists")
+    if response.status_code == 200:
+        data = response.json()
+        return data.get('default_lists', {})
+    else:
+        st.error(f"Failed to fetch default lists. Status code: {response.status_code}")
+        return {}
 
 def api_process_doc(config):
     url = f"{BASE_URL}/process_doc"

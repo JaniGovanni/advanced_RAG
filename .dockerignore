@@ -21,3 +21,4 @@ app/doc_processing/late_chunking/develo.ipynb
 cookbooks/test.py
 app/test/
 deprecated/
+app/.env
