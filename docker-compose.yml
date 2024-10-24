@@ -1,10 +1,23 @@
 version: '3.8'
 
 services:
-  advanced-rag:
-    build: .
+  streamlit-app:
+    build:
+      context: .
+      dockerfile: dockerfile.streamlit
     ports:
       - "8501:8501"
+    environment:
+      - BASE_URL=http://api-server:8503
+    depends_on:
+      - api-server
+
+  api-server:
+    build:
+      context: .
+      dockerfile: dockerfile.api
+    ports:
+      - "8503:8503"
     environment:
       - GROQ_API_KEY=${GROQ_API_KEY}
     volumes:
@@ -15,6 +28,8 @@ services:
 volumes:
   advanced_rag_storage:
 
+# export GROQ_API_KEY=your_groq_api_key
+# docker compose up
 
 
 # export GROQ_API_KEY=your_groq_api_key

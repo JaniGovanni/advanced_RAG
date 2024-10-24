@@ -1,0 +1,15 @@
+FROM python:3.11-slim
+
+WORKDIR /application
+
+COPY ./main.py /application
+COPY ./pages /application/pages
+COPY ./app/api_setup/dataclasses_api.py /application/app/api_setup
+COPY ./app/doc_processing/filters/default_filters.py /application/app/doc_processing/filters
+COPY ./requirements/requirements_streamlit.txt /application/requirements.txt
+
+RUN pip install --no-cache-dir -r /application/requirements.txt
+
+EXPOSE 8501
+
+CMD ["streamlit", "run", "main.py"]
