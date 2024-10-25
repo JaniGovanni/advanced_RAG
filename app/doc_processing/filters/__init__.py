@@ -1,7 +1,7 @@
 import re
 from typing import List, Optional
 from unstructured.documents.elements import Element
-from .default_selections import unwanted_categories_default, unwanted_titles_list_default, unwanted_titles_list_default_regex
+from app.doc_processing.filters.default_selections import unwanted_categories_default, unwanted_titles_list_default, unwanted_titles_list_default_regex
 def filter_elements_by_title(elements: List[Element], unwanted_titles_list: List[str]) -> List[Element]:
     """
     Removes all elements that belong to a title containing the expressions of the filter strings.

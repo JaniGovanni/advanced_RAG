@@ -14,7 +14,7 @@ from app.llm import get_groq_llm, get_ollama_llm
 import numpy as np
 
 
-# Get a real LLM instance
+
 llm = get_ollama_llm()
 
 def test_generate_multi_query():

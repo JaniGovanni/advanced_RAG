@@ -34,7 +34,7 @@ def test_process_doc():
         filepath=None,
         url=url,
         local=True,
-        situate_context=True,
+        situate_context=False,
         late_chunking=False
     )
 

@@ -60,8 +60,6 @@ def upload_file():
 def api_process_doc():
     try:
         config_data = request.json
-        #app.logger.info(f"Received config data: {config_data}")
-        #config = ProcessDocConfigAPI(**config_data)
         doc_config = ProcessDocConfig(**config_data)
         result = process_doc(doc_config)
         # Create Chroma vectorstore and store the processed documents

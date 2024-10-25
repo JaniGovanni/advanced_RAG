@@ -28,7 +28,7 @@ def filepath_to_id(filepath, file_id):
     # Check if the filepath already exists as a value
     existing_id = next((key for key, value in mapping.items() if value == filepath), None)
     if existing_id:
-        del mapping[existing_id]  # Remove the existing entry
+        del mapping[existing_id]  
     
     mapping[file_id] = filepath  # Add the new file_id: filepath pair
     

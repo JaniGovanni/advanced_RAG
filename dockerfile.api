@@ -41,13 +41,3 @@ RUN mkdir -p /data
 
 # Run app.py when the container launches
 CMD ["python", "app/api_setup/api.py"]
-
-# Build the Docker image
-# docker login
-# docker build -t your-app-name .
-
-# Run the Docker container
-# for volume: you can use advanced_rag_storage:/data
-# this will create a volume advanced_rag_storage in the docker default
-# path for the volume (/var/lib/docker/volumes/advanced_rag_storage/data
-# docker run -p 8501:8501 -e GROQ_API_KEY=your_groq_api_key -v /Users/jan/Desktop/stuff:/data your-app-name

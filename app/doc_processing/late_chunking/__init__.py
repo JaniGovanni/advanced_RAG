@@ -55,11 +55,7 @@ def late_chunking_experimental(
     Returns:
         list: List of pooled embeddings for each span.
     """
-    # equal to model_output.last_hidden_state
     token_embeddings = model_output.last_hidden_state
-    # for embeddings, annotations in zip(token_embeddings, span_annotation):
-    #attention_mask = attention_mask.squeeze(0)  # Remove batch dimension
-    # expand attention mask to match the shape of the embeddings
     attention_mask = attention_mask.unsqueeze(-1).expand_as(token_embeddings).float()
     pooled_embeddings = [
         mean_pooling(token_embeddings[: ,start:end, :], attention_mask[: ,start:end, :]).squeeze(0)
