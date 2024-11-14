@@ -24,3 +24,4 @@ linkedin/
 app/doc_processing/late_chunking/develo.ipynb
 cookbooks/test.py
 deprecated/
+pycache_rm.txt

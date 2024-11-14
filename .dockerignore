@@ -22,3 +22,4 @@ cookbooks/test.py
 app/test/
 deprecated/
 app/.env
+pycache_rm.txt
